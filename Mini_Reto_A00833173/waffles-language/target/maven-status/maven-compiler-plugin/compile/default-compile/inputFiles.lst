@@ -1,1 +1,8 @@
 C:\Users\jaime\OneDrive\Documentos\GitHub\compiladores-3002b\Mini_Reto_A00833173\waffles-language\src\main\java\com\waffles\App.java
+C:\Users\jaime\OneDrive\Documentos\GitHub\compiladores-3002b\Mini_Reto_A00833173\waffles-language\src\main\java\com\waffles\ArithmeticCompiler.java
+C:\Users\jaime\OneDrive\Documentos\GitHub\compiladores-3002b\Mini_Reto_A00833173\waffles-language\src\main\java\com\waffles\lexer_files\ArithmeticBaseListener.java
+C:\Users\jaime\OneDrive\Documentos\GitHub\compiladores-3002b\Mini_Reto_A00833173\waffles-language\src\main\java\com\waffles\lexer_files\ArithmeticBaseVisitor.java
+C:\Users\jaime\OneDrive\Documentos\GitHub\compiladores-3002b\Mini_Reto_A00833173\waffles-language\src\main\java\com\waffles\lexer_files\ArithmeticLexer.java
+C:\Users\jaime\OneDrive\Documentos\GitHub\compiladores-3002b\Mini_Reto_A00833173\waffles-language\src\main\java\com\waffles\lexer_files\ArithmeticListener.java
+C:\Users\jaime\OneDrive\Documentos\GitHub\compiladores-3002b\Mini_Reto_A00833173\waffles-language\src\main\java\com\waffles\lexer_files\ArithmeticParser.java
+C:\Users\jaime\OneDrive\Documentos\GitHub\compiladores-3002b\Mini_Reto_A00833173\waffles-language\src\main\java\com\waffles\lexer_files\ArithmeticVisitor.java
