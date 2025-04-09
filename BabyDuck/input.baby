@@ -1,0 +1,5 @@
+program example;
+
+int x;
+
+main {}

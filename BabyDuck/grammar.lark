@@ -10,34 +10,33 @@ statement: assign
         | f_call 
         | print_
 
-assign: ID EQUAL expresion SEMICOLON
+assign: ID EQUAL expression SEMICOLON
 
-vars: VAR ID (COMMA ID)* COLON TYPE SEMICOLON
-vars_func: VAR ID (COMMA ID)* COLON TYPE SEMICOLON
+vars: VAR ID (COMMA ID)* COLON type_ SEMICOLON
+vars_func: VAR ID (COMMA ID)* COLON type_ SEMICOLON
 
-funcs: (VOID | TYPE) ID OPEN_PAREN [params] CLOSE_PAREN OPEN_BRACKET vars_func* body CLOSE_BRACKET SEMICOLON
-params: ID COLON TYPE (COMMA ID COLON TYPE)*
+funcs: (VOID | type_) ID OPEN_PAREN [params] CLOSE_PAREN OPEN_BRACKET vars_func* body CLOSE_BRACKET SEMICOLON
+params: ID COLON type_ (COMMA ID COLON type_)*
 
 f_call: ID OPEN_PAREN [arguments] CLOSE_PAREN SEMICOLON
-arguments: expresion (COMMA expresion)*
+arguments: expression (COMMA expression)*
 
-out: PRINT_WORD OPEN_PAREN out_content (COMMA out_content)* CLOSE_PAREN SEMICOLON
-out_content: expresion | STRING
+print_: PRINT OPEN_PAREN print_content (COMMA print_content)* CLOSE_PAREN SEMICOLON
+print_content: expression | ESCAPED_STRING
 
-condition: IF OPEN_PAREN expresion CLOSE_PAREN body (ELSE body)? SEMICOLON
-cycle: WHILE OPEN_PAREN expresion CLOSE_PAREN body SEMICOLON
+condition: IF OPEN_PAREN expression CLOSE_PAREN body (ELSE body)? SEMICOLON
+cycle: WHILE OPEN_PAREN expression CLOSE_PAREN body SEMICOLON
 
 body: OPEN_KEY statement* CLOSE_KEY
 
-factor: (OPEN_PAREN expresion CLOSE_PAREN) 
-        | ((ADD | SUB)? (CTE | ID))
-termino: factor ((MULT | DIV) factor)*
-exp: termino ((ADD | SUB) termino)*
-expresion: exp ((TYPE_CONDITIONAL) exp)*
+expression: exp (TYPE_CONDITIONAL exp)*
+exp: term ((ADD | SUB) term)*
+term: factor ((MULT | DIV) factor)*
+factor: OPEN_PAREN expression CLOSE_PAREN 
+        | (ADD | SUB)? (INT | FLOAT | ID)
 
+type_: "int" | "float"
 TYPE_CONDITIONAL: ">" | "<" | "!="
-TYPE: "int" | "float"
-CTE: NUMBER | DECIMAL
 
 PROGRAM: "program"
 MAIN: "main"
@@ -46,7 +45,7 @@ VAR: "var"
 WHILE: "while"
 IF: "if"
 ELSE: "else"
-PRINT_WORD: "print"
+PRINT: "print"
 
 OPEN_PAREN: "("
 CLOSE_PAREN: ")"
@@ -63,15 +62,17 @@ SUB: "-"
 GREATER: ">"
 LESS: "<"
 DIFFERENT: "!="
-DOT: "."
 COMMA: ","
 SEMICOLON: ";"
 COLON: ":"
 
-ID: /_?[a-zA-Z][a-zA-Z0-9_]*/
-DECIMAL: /\d+\.\d+/
-NUMBER: /\d+/
-STRING: /".*?"/
-
+%import common.ESCAPED_STRING
+%import common.INT
+%import common.FLOAT
+%import common.LETTER
+%import common.DIGIT
 %import common.WS
+
+ID: "_"? LETTER (LETTER | DIGIT | "_")*
+
 %ignore WS

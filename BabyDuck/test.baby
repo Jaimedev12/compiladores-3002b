@@ -1,0 +1,29 @@
+program SimpleExample;
+var x, y : int;
+var result : float;
+
+void showSum(int a, int b) {
+    print("The sum is: ", a + b);
+}
+
+main {
+    x = 5;
+    y = 10;
+    result = 3.14;
+
+    print("Initial values:");
+    print("x = ", x);
+    print("y = ", y);
+    print("result = ", result);
+
+    while (x < 15) {
+        x = x + 1;
+        print("x incremented to: ", x);
+    }
+
+    if (x > 10) {
+        showSum(x, y);
+    } else {
+        print("x is too small");
+    }
+}
