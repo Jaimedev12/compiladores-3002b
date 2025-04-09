@@ -1,8 +1,8 @@
 start: program
 
-program: PROGRAM ID SEMICOLON vars* funcs* MAIN body_end
+program: PROGRAM ID SEMICOLON [vars] funcs* MAIN body END
 
-body_end: OPEN_KEY statement* CLOSE_KEY
+body: OPEN_KEY statement* CLOSE_KEY
 
 statement: assign 
         | condition 
@@ -12,10 +12,9 @@ statement: assign
 
 assign: ID EQUAL expression SEMICOLON
 
-vars: VAR ID (COMMA ID)* COLON type_ SEMICOLON
-vars_func: VAR ID (COMMA ID)* COLON type_ SEMICOLON
+vars: VAR (ID (COMMA ID)* COLON type_ SEMICOLON)+
 
-funcs: (VOID | type_) ID OPEN_PAREN [params] CLOSE_PAREN OPEN_BRACKET vars_func* body CLOSE_BRACKET SEMICOLON
+funcs: (VOID | type_) ID OPEN_PAREN [params] CLOSE_PAREN OPEN_BRACKET [vars] body CLOSE_BRACKET SEMICOLON
 params: ID COLON type_ (COMMA ID COLON type_)*
 
 f_call: ID OPEN_PAREN [arguments] CLOSE_PAREN SEMICOLON
@@ -25,7 +24,7 @@ print_: PRINT OPEN_PAREN print_content (COMMA print_content)* CLOSE_PAREN SEMICO
 print_content: expression | ESCAPED_STRING
 
 condition: IF OPEN_PAREN expression CLOSE_PAREN body (ELSE body)? SEMICOLON
-cycle: WHILE OPEN_PAREN expression CLOSE_PAREN body SEMICOLON
+cycle: WHILE OPEN_PAREN expression CLOSE_PAREN DO body SEMICOLON
 
 body: OPEN_KEY statement* CLOSE_KEY
 
@@ -33,16 +32,19 @@ expression: exp (TYPE_CONDITIONAL exp)*
 exp: term ((ADD | SUB) term)*
 term: factor ((MULT | DIV) factor)*
 factor: OPEN_PAREN expression CLOSE_PAREN 
-        | (ADD | SUB)? (INT | FLOAT | ID)
+        | (ADD | SUB)? (CTE | ID)
 
 type_: "int" | "float"
 TYPE_CONDITIONAL: ">" | "<" | "!="
+CTE: INT | FLOAT
 
 PROGRAM: "program"
+END: "end"
 MAIN: "main"
 VOID: "void"
 VAR: "var"
 WHILE: "while"
+DO: "do"
 IF: "if"
 ELSE: "else"
 PRINT: "print"
@@ -72,7 +74,6 @@ COLON: ":"
 %import common.LETTER
 %import common.DIGIT
 %import common.WS
-
-ID: "_"? LETTER (LETTER | DIGIT | "_")*
+%import common.CNAME -> ID
 
 %ignore WS
