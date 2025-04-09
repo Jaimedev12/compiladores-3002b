@@ -1,0 +1,26 @@
+Tree(
+    'add', 
+    [
+        Tree('number', [Token('NUMBER', '3')]), 
+        Tree('number', [Token('NUMBER', '4')])
+    ]
+)
+
+
+
+
+
+
+
+Tree(
+    Token('RULE', 'start'), 
+    [
+        Tree(
+            'add', 
+            [
+                Tree('number', [Token('NUMBER', '3')]), 
+                Tree('number', [Token('NUMBER', '4')])
+            ]
+        )
+    ]
+)

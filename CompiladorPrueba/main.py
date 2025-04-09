@@ -23,12 +23,15 @@ class CalcTransformer(Transformer):
     def mul(self, a, b): return a * b
     def div(self, a, b): return a / b
     def neg(self, a): return -a
+    def product(self, a): return float(a)
 
 # Parse and evaluate
 def main():
-    expression = "3 + 4 * (2 - 1)"
+    expression = "3 + 4 * 2"
     print_tokens(expression)
+    print("")
     tree = parser.parse(expression)
+    print(tree)
     print("")
     print(tree.pretty())
     

@@ -4,7 +4,7 @@
     | sum "+" product   -> add
     | sum "-" product   -> sub
 
-?product: atom
+product: atom
     | product "*" atom  -> mul
     | product "/" atom  -> div
 
