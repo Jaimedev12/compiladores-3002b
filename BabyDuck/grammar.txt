@@ -1,0 +1,77 @@
+start: program
+
+program: PROGRAM ID SEMICOLON vars* funcs* MAIN body_end
+
+body_end: OPEN_KEY statement* CLOSE_KEY
+
+statement: assign 
+        | condition 
+        | cycle 
+        | f_call 
+        | print_
+
+assign: ID EQUAL expresion SEMICOLON
+
+vars: VAR ID (COMMA ID)* COLON TYPE SEMICOLON
+vars_func: VAR ID (COMMA ID)* COLON TYPE SEMICOLON
+
+funcs: (VOID | TYPE) ID OPEN_PAREN [params] CLOSE_PAREN OPEN_BRACKET vars_func* body CLOSE_BRACKET SEMICOLON
+params: ID COLON TYPE (COMMA ID COLON TYPE)*
+
+f_call: ID OPEN_PAREN [arguments] CLOSE_PAREN SEMICOLON
+arguments: expresion (COMMA expresion)*
+
+out: PRINT_WORD OPEN_PAREN out_content (COMMA out_content)* CLOSE_PAREN SEMICOLON
+out_content: expresion | STRING
+
+condition: IF OPEN_PAREN expresion CLOSE_PAREN body (ELSE body)? SEMICOLON
+cycle: WHILE OPEN_PAREN expresion CLOSE_PAREN body SEMICOLON
+
+body: OPEN_KEY statement* CLOSE_KEY
+
+factor: (OPEN_PAREN expresion CLOSE_PAREN) 
+        | ((ADD | SUB)? (CTE | ID))
+termino: factor ((MULT | DIV) factor)*
+exp: termino ((ADD | SUB) termino)*
+expresion: exp ((TYPE_CONDITIONAL) exp)*
+
+TYPE_CONDITIONAL: ">" | "<" | "!="
+TYPE: "int" | "float"
+CTE: NUMBER | DECIMAL
+
+PROGRAM: "program"
+MAIN: "main"
+VOID: "void"
+VAR: "var"
+WHILE: "while"
+IF: "if"
+ELSE: "else"
+PRINT_WORD: "print"
+
+OPEN_PAREN: "("
+CLOSE_PAREN: ")"
+OPEN_KEY: "{"
+CLOSE_KEY: "}"
+OPEN_BRACKET: "["
+CLOSE_BRACKET: "]"
+
+MULT: "*"
+DIV: "/"
+EQUAL: "="
+ADD: "+"
+SUB: "-"
+GREATER: ">"
+LESS: "<"
+DIFFERENT: "!="
+DOT: "."
+COMMA: ","
+SEMICOLON: ";"
+COLON: ":"
+
+ID: /_?[a-zA-Z][a-zA-Z0-9_]*/
+DECIMAL: /\d+\.\d+/
+NUMBER: /\d+/
+STRING: /".*?"/
+
+%import common.WS
+%ignore WS
