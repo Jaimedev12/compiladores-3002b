@@ -1,0 +1,17 @@
+program aritmetica;
+var a1: int; 
+    y5: float;
+
+main {
+    a1 = 4;
+    y5 = (2.0);
+    _d4d = 2.0 + a1;
+    f = _d4d - y5;
+    print(a1);
+    print(y5);
+    print(_d4d);
+    print(f);
+    print("done");
+}
+
+end

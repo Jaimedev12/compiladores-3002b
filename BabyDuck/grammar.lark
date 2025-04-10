@@ -1,8 +1,6 @@
-start: program
+?start: program
 
 program: PROGRAM ID SEMICOLON [vars] funcs* MAIN body END
-
-body: OPEN_KEY statement* CLOSE_KEY
 
 statement: assign 
         | condition 
