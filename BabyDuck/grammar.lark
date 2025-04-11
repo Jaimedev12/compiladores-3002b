@@ -1,8 +1,8 @@
-?start: program
+?start: program_
 
-program: PROGRAM ID SEMICOLON [vars] funcs* MAIN body END
+program_: PROGRAM ID SEMICOLON [vars] funcs* MAIN body END
 
-statement: assign 
+statement: assign
         | condition 
         | cycle 
         | f_call 

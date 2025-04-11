@@ -1,21 +1,17 @@
 program aritmetica;
-var a1, _x, c: int; 
-    y5, _d4d, f: float;
+var a1, _b: int; 
+    c3, _d4: float;
 
 main {
     a1 = 4;
-    _x = (1 - 2);
-    y5 = (2.0);
-    c = _x + a1 - 5;
+    _b = (1 - 2);
+    c3 = (2.0);
     a1 = 3;
-    _d4d = 2.0 + c;
-    f = _d4d - y5;
+    _d4 = 2.0 + c3;
     print(a1);
-    print(_x);
-    print(c);
-    print(y5);
-    print(_d4d);
-    print(f);
+    print(_b);
+    print(c3);
+    print(_d4);
 }
 
 end
