@@ -1,5 +1,7 @@
 program example;
 
-int x;
+var x : int;
 
 main {}
+
+end

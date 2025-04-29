@@ -1,40 +1,66 @@
 ?start: program_
 
-program_: PROGRAM ID SEMICOLON [vars] funcs* MAIN body END
+?program_: PROGRAM ID SEMICOLON MAIN body END -> program_no_vars_no_funcs
+        | PROGRAM ID SEMICOLON funcs+ MAIN body END -> program_no_vars
+        | PROGRAM ID SEMICOLON vars MAIN body END -> program_no_funcs
+        | PROGRAM ID SEMICOLON vars funcs+ MAIN body END -> program_all
 
-statement: assign
-        | condition 
-        | cycle 
-        | f_call 
-        | print_
+?statement: assign -> statement_assign
+        | condition -> statement_condition
+        | cycle -> statement_cycle
+        | f_call -> statement_f_call
+        | print -> statement_print
 
 assign: ID EQUAL expression SEMICOLON
 
 vars: VAR (ID (COMMA ID)* COLON type_ SEMICOLON)+
 
-funcs: (VOID | type_) ID OPEN_PAREN [params] CLOSE_PAREN OPEN_BRACKET [vars] body CLOSE_BRACKET SEMICOLON
-params: ID COLON type_ (COMMA ID COLON type_)*
+?funcs: (VOID | type_) ID OPEN_PAREN CLOSE_PAREN OPEN_BRACKET body CLOSE_BRACKET SEMICOLON -> funcs_no_params_no_vars
+        | (VOID | type_) ID OPEN_PAREN CLOSE_PAREN OPEN_BRACKET vars body CLOSE_BRACKET SEMICOLON -> funcs_no_params
+        | (VOID | type_) ID OPEN_PAREN params CLOSE_PAREN OPEN_BRACKET body CLOSE_BRACKET SEMICOLON -> funcs_no_vars
+        | (VOID | type_) ID OPEN_PAREN params CLOSE_PAREN OPEN_BRACKET vars body CLOSE_BRACKET SEMICOLON -> funcs_all
+?params: ID COLON type_ -> params_single
+        | ID COLON type_ (COMMA ID COLON type_)+ -> params_multiple
+
 
 f_call: ID OPEN_PAREN [arguments] CLOSE_PAREN SEMICOLON
-arguments: expression (COMMA expression)*
+?arguments: expression -> arguments_single
+        | expression (COMMA expression)+ -> arguments_multiple
 
-print_: PRINT OPEN_PAREN print_content (COMMA print_content)* CLOSE_PAREN SEMICOLON
-print_content: expression | ESCAPED_STRING
+?print: PRINT OPEN_PAREN print_content CLOSE_PAREN SEMICOLON -> print_single
+        | PRINT OPEN_PAREN print_content (COMMA print_content)+ CLOSE_PAREN SEMICOLON -> print_multiple
+?print_content: expression -> print_expression
+        | ESCAPED_STRING -> print_string
 
-condition: IF OPEN_PAREN expression CLOSE_PAREN body (ELSE body)? SEMICOLON
+?condition: IF OPEN_PAREN expression CLOSE_PAREN body SEMICOLON -> condition_if
+        | IF OPEN_PAREN expression CLOSE_PAREN body (ELSE body) SEMICOLON -> condition_else
 cycle: WHILE OPEN_PAREN expression CLOSE_PAREN DO body SEMICOLON
 
-body: OPEN_KEY statement* CLOSE_KEY
+?body: OPEN_KEY CLOSE_KEY -> body_empty
+        | OPEN_KEY statement+ CLOSE_KEY -> body_block
 
-expression: exp (TYPE_CONDITIONAL exp)*
-exp: term ((ADD | SUB) term)*
-term: factor ((MULT | DIV) factor)*
-factor: OPEN_PAREN expression CLOSE_PAREN 
-        | (ADD | SUB)? (CTE | ID)
+?expression: exp -> expression_simple
+        | exp (comparison_op exp)+ -> expression_conditional
+?exp: term -> exp_simple
+        | term (SUB term)+ -> exp_sub
+        | term (ADD term)+ -> exp_add
 
-type_: "int" | "float"
-TYPE_CONDITIONAL: ">" | "<" | "!="
+?term: factor -> term_simple
+        | factor (MULT factor)+ -> term_mult
+        | factor (DIV factor)+ -> term_div
+?factor: OPEN_PAREN expression CLOSE_PAREN -> factor_expression
+        | CTE -> factor_cte
+        | ID -> factor_id
+        | ADD CTE -> factor_cte_add
+        | ADD ID -> factor_id_add
+        | SUB CTE -> factor_cte_sub
+        | SUB ID -> factor_id_sub
+
+?type_: "int" -> type_int
+        | "float" -> type_float
+comparison_op: GREATER | LESS | DIFFERENT
 CTE: INT | FLOAT
+ID: CNAME
 
 PROGRAM: "program"
 END: "end"
@@ -66,12 +92,17 @@ COMMA: ","
 SEMICOLON: ";"
 COLON: ":"
 
+%import common.WS
+%import common.CNAME
 %import common.ESCAPED_STRING
 %import common.INT
 %import common.FLOAT
 %import common.LETTER
 %import common.DIGIT
-%import common.WS
-%import common.CNAME -> ID
+
+
+// // Explicitly exclude your keywords from being recognized as IDs
+// _RESERVED: VAR | PROGRAM | END | MAIN | VOID | WHILE | DO | IF | ELSE | PRINT
+// %ignore _RESERVED
 
 %ignore WS

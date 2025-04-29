@@ -1,10 +1,12 @@
 program SimpleExample;
-var x, y : int;
-var result : float;
+var x, y : int; 
+    result : float;
 
-void showSum(int a, int b) {
-    print("The sum is: ", a + b);
-}
+void showSum(a : int, b : int) [
+    {
+        print("The sum is: ", a + b);
+    }
+];
 
 main {
     x = 5;
@@ -16,14 +18,16 @@ main {
     print("y = ", y);
     print("result = ", result);
 
-    while (x < 15) {
+    while (x < 15) do {
         x = x + 1;
         print("x incremented to: ", x);
-    }
+    };
 
     if (x > 10) {
         showSum(x, y);
     } else {
         print("x is too small");
-    }
+    };
 }
+
+end
