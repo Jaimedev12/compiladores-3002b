@@ -1,0 +1,12 @@
+program my_program;
+var x: int; y: float;
+main {
+    x = 5;
+    y = 3.14;
+    print(x, "Hello");
+    while (x > 0) do {
+        x = x - 1;
+    };
+}
+
+end

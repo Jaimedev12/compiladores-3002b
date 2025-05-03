@@ -1,0 +1,9 @@
+program my_program;
+var x: int; y, z: float;
+main {
+    x = 5;
+    y = 3.14;
+    print("Hello");
+}
+
+end

@@ -1,7 +1,0 @@
-program example;
-
-var x : int;
-
-main {}
-
-end
