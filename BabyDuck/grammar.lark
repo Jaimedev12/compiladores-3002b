@@ -62,7 +62,7 @@ cycle: WHILE OPEN_PAREN expression CLOSE_PAREN DO body SEMICOLON
 ?type_: "int" -> type_int
         | "float" -> type_float
 comparison_op: GREATER | LESS | DIFFERENT
-cte: INT -> int
+?cte: INT -> int
         | FLOAT -> float
 ID: CNAME
 

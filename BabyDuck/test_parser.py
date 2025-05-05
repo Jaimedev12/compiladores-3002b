@@ -1,37 +1,54 @@
 from BabyTransformer import get_parser
-import lark # Import the lark module for parsing
+# import lark # Import the lark module for parsing
 import os # Import the os module
 # pprint is no longer needed for the raw tree output
 # import pprint 
 
+import dataclasses # Import the dataclasses module
+from lark import Token, Tree # Import Lark's Tree and Token if you might print raw parse trees
+
 def pretty_print_tree(tree, indent=0):
-    """Recursively print the tree structure with indentation."""
-    if isinstance(tree, list):
-        print(" " * indent + "List ---")
-        for item in tree:
-            pretty_print_tree(item, indent+1)
+    """Recursively prints a nested structure (like an AST) with indentation."""
+    indent_str = ' ' * indent
+
+    # Handle dataclass instances (your AST nodes)
+    if dataclasses.is_dataclass(tree):
+        print(f"{indent_str}{type(tree).__name__}:")
+        for field in dataclasses.fields(tree):
+            value = getattr(tree, field.name)
+            # Print the field name
+            print(f"{indent_str}  {field.name}:")
+            # Recursively print the field's value with increased indentation
+            pretty_print_tree(value, indent + 4)
+    # Handle lists
+    elif isinstance(tree, list):
+        if not tree:
+            print(f"{indent_str}[]")
+        else:
+            print(f"{indent_str}List:")
+            for i, item in enumerate(tree):
+                print(f"{indent_str}  [{i}]:")
+                pretty_print_tree(item, indent + 4)
+    # Handle tuples (less common for ASTs, but possible)
     elif isinstance(tree, tuple):
-        print(" " * indent + "Tuple ---")
-        print(" " * indent + str(tree[0]))
-        for item in tree[1:]:
-            pretty_print_tree(item, indent + 2)
-    elif isinstance(tree, lark.tree.Tree):
-        print(" " * indent + "Tree ---")
-        print(" " * indent + str(tree.data))
-        for child in tree.children:
-            pretty_print_tree(child, indent + 2)
+        if not tree:
+            print(f"{indent_str}()")
+        else:
+            print(f"{indent_str}Tuple:")
+            for i, item in enumerate(tree):
+                print(f"{indent_str}  ({i}):")
+                pretty_print_tree(item, indent + 4)
+    # Handle raw Lark Trees (if printing before transformation)
+    elif isinstance(tree, Tree):
+         print(f"{indent_str}Tree(data={tree.data!r}):")
+         for child in tree.children:
+             pretty_print_tree(child, indent + 2)
+    # Handle raw Lark Tokens (if printing before transformation)
+    elif isinstance(tree, Token):
+         print(f"{indent_str}Token({tree.type}, {tree.value!r})")
+    # Handle basic types (int, float, str, bool, None)
     else:
-        # if (isinstance(tree, str)):
-        #     print(" " * indent + str(tree) + "<-- String ----")
-        # elif (isinstance(tree, int)):
-        #     print(" " * indent + str(tree) + "<-- Int ----")
-        # elif (isinstance(tree, float)):
-        #     print(" " * indent + str(tree) + "<-- Float ----")
-        # elif (isinstance(tree, bool)):
-        #     print(" " * indent + str(tree) + "<-- Bool ----")
-        # else:
-        #     print(" " * indent + str(tree) + "<-- Unknown ----")
-        print(" " * indent + str(tree))
+        print(f"{indent_str}{repr(tree)}")
 
 def test_parser():
     parser = get_parser()
@@ -56,7 +73,6 @@ def test_parser():
         print(parse_tree)
         print("\n--- Pretty ---")
         pretty_print_tree(parse_tree)  # Use the pretty_print_tree function for better readability
-        # print(parse_tree.pretty()) # Use the pretty() method for nice formatting
 
         # If you later want to apply the transformer and print the transformed AST:
         # transformer = MyTransformer() # Assuming MyTransformer is defined in BabyTransformer
