@@ -8,10 +8,7 @@ class SemanticCube:
                     "*": "int",
                     "/": "int",
                     "<": "int",
-                    "<=": "int",
                     ">": "int",
-                    ">=": "int",
-                    "==": "int",
                     "!=": "int",
                 },
                 "float": {
@@ -20,10 +17,7 @@ class SemanticCube:
                     "*": "float",
                     "/": "float",
                     "<": "int",
-                    "<=": "int",
                     ">": "int",
-                    ">=": "int",
-                    "==": "int",
                     "!=": "int",
                 }
             },
@@ -34,10 +28,7 @@ class SemanticCube:
                     "*": "float",
                     "/": "float",
                     "<": "int",
-                    "<=": "int",
                     ">": "int",
-                    ">=": "int",
-                    "==": "int",
                     "!=": "int",
                 },
                 "float": {
@@ -46,10 +37,7 @@ class SemanticCube:
                     "*": "float",
                     "/": "float",
                     "<": "int",
-                    "<=": "int",
                     ">": "int",
-                    ">=": "int",
-                    "==": "int",
                     "!=": "int",
                 }
             }
@@ -76,18 +64,18 @@ class SemanticCube:
             return self.cube[type1][type2][operation]
         return None  # Invalid operation or types
 
-    def is_decl_valid(self, type1, type2):
+    def is_decl_valid(self, from_type, to_type):
         # Check if the types are valid for declaration
-        for cur_type in [type1, type2]:
+        for cur_type in [from_type, to_type]:
             if cur_type not in self.valid_declarations:
                 raise ValueError(f"Invalid type: {cur_type}. Expected 'int' or 'float'.")
-        return (type2 in self.valid_declarations[type1])
+        return (to_type in self.valid_declarations[from_type])
     
-    def convert_type(self, type1, type2, value):
+    def convert_type(self, from_type, to_type, value):
         # Convert value from type1 to type2 if valid
-        if not self.is_decl_valid(type1, type2):
+        if not self.is_decl_valid(to_type, from_type):
             raise ValueError("Invalid declaration: types not compatible")
             
-        return self.valid_declarations[type1][type2](value)
+        return self.valid_declarations[to_type][from_type](value)
         
         

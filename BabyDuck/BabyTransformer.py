@@ -294,8 +294,6 @@ class BabyTransformer(Transformer):
         return str(id)
     
     
-    
-    
 # Load the grammar and create the parser
 def get_parser():
     with open("grammar.lark", "r") as f:

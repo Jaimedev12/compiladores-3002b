@@ -87,14 +87,3 @@ class Body():
 class FCall(Statement):
     id: str
     args: List[Expression]
-
-
-@dataclass
-class Comparison():
-    left: Expression
-    operator: str
-    right: Expression
-
-@dataclass
-class ExpressionCompound():
-    comparisons: List[Comparison]
