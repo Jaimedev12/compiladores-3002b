@@ -1,4 +1,4 @@
-from typing import Optional, Any, List
+from typing import Union, Optional, Any, List
 from dataclasses import dataclass
 from node_dataclasses import Param
 
@@ -6,7 +6,7 @@ from node_dataclasses import Param
 class Symbol:
     name: str
     data_type: str
-    value: Optional[Any] = None
+    value: Optional[Union[int, float]] = None
     category: str = "var"
     param_index: Optional[int] = None
 
@@ -39,7 +39,7 @@ class SymbolTable:
     def get_scope(self, name: str) -> Scope:
         if name not in self.scopes:
             raise ValueError(f"Scope {name} not found.")
-        return self.scopes.get(name)
+        return self.scopes[name]
     
     def get_variable(self, name: str, scope_name: str) -> Optional[Symbol]:
         """Get a symbol from the specified scope."""
@@ -62,7 +62,7 @@ class SymbolTable:
         return function_scope.params[param_index]
             
     
-    def get_symbol(self, name: str, scope_name: str) -> Optional[Symbol]:
+    def get_symbol(self, name: str, scope_name: str) -> Symbol:
         """Get a symbol from the specified scope."""
         local_scope = self.get_scope(scope_name)
         global_scope = self.get_scope("global")

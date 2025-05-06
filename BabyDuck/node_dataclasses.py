@@ -1,25 +1,31 @@
 from dataclasses import dataclass, field
-from typing import List, Optional, Union, Tuple
+from turtle import right
+from typing import List, Optional, Union, Tuple, Literal
 
 @dataclass
 class Expression():
     left_expr: 'Exp'
-    operations: List[Tuple[str, 'Exp']] = field(default_factory=list) # List of tuples (operator, expression)
+    op : Optional[Union[Literal["<"], Literal[">"], Literal["!="]]] = None  # Operator for the expression (e.g., '==', '!=', '<', '>')
+    right_expr: Optional['Exp'] = None  # Right-hand side expression (if any)
 
 @dataclass
 class Exp():
     left_term: 'Term'
-    operations : List[Tuple[str, 'Term']] = field(default_factory=list)  # List of tuples (operator, term)
+    operations : List[ \
+        Tuple[Union[Literal["+"], Literal["-"]], 'Term'] \
+        ] = field(default_factory=list)  # List of tuples (operator, term)
 
 @dataclass
 class Term():
     left_factor: 'Factor'
-    operations: List[Tuple[str, 'Factor']] = field(default_factory=list)  # List of tuples (operator, factor)
+    operations: List[ \
+        Tuple[Union[Literal["*"], Literal["/"]], 'Factor'] \
+        ] = field(default_factory=list)  # List of tuples (operator, factor)
 
 @dataclass
 class Factor():
     value: Union[int, float, str, Expression] = 0
-    sign: Optional[str] = None  # '+' or '-'
+    sign: Optional[Union[Literal["+"], Literal["-"]]] = None
 
 
 @dataclass

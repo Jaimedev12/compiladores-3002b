@@ -1,77 +1,82 @@
+from typing import cast
 from SemanticCube import SemanticCube
-from node_dataclasses import Expression
+from node_dataclasses import Expression, Exp, Term, Factor
+from SymbolTable import SymbolTable
 # from lark import Tree
 
 class BabyInterpreter:
-    def __init__(self, symbol_table):
+    def __init__(self, symbol_table: SymbolTable):
         self.symbol_table = symbol_table
         self.current_scope = "global"
         self.semantic_cube = SemanticCube()
 
-    def evaluate_expression(self, expr_tree):
-        expr_class = expr_tree.__class__.__name__
+    def evaluate_expression(self, current_tree_node) -> int | float:
+        expr_class = current_tree_node.__class__.__name__
         if expr_class == "Expression":
             
-            last_value = self.evaluate_expression(expr_tree.left_expr)
-            if len(expr_tree.operations) == 0:
+            current_tree_node = cast(Expression, current_tree_node)
+            last_value = self.evaluate_expression(current_tree_node.left_expr)
+            if current_tree_node.op is None or current_tree_node.right_expr is None:
                 return last_value
             
-            flag = False
-            for op, expr in expr_tree.operations:
-                right_value = self.evaluate_expression(expr)
-    
-                if op == '>':
-                    if last_value <= right_value:
-                        flag = True
-                elif op == '<':
-                    if last_value >= right_value:
-                        flag = True
-                elif op == '!=':
-                    if last_value == right_value:
-                        flag = True
-                else:
-                    raise ValueError(f"Unsupported operator: {op}")
-                
-                last_value = right_value
-                    
-            if flag:
-                return 0
-            else:
-                return 1
+            right_value = self.evaluate_expression(current_tree_node.right_expr)
+            op = current_tree_node.op
+
+            if op == '>':
+                if last_value <= right_value:
+                    return 1
+            elif op == '<':
+                if last_value >= right_value:
+                    return 1
+            elif op == '!=':
+                if last_value == right_value:
+                    return 1
+            
+            return 0
+            
         
         elif expr_class == "Exp":
-            left_value = self.evaluate_expression(expr_tree.left_term)
-            for op, term in expr_tree.operations:
+            current_tree_node = cast(Exp, current_tree_node)
+            left_value = self.evaluate_expression(current_tree_node.left_term)
+            for op, term in current_tree_node.operations:
                 right_value = self.evaluate_expression(term)
-                left_value = self.semantic_cube.get_resulting_type(left_value, right_value, op)
+                left_value = self.semantic_cube.perform_operation(left_value, right_value, op)
             return left_value
         
         elif expr_class == "Term":
-            left_value = self.evaluate_expression(expr_tree.left_factor)
-            for op, factor in expr_tree.operations:
+            current_tree_node = cast(Term, current_tree_node)
+            left_value = self.evaluate_expression(current_tree_node.left_factor)
+            for op, factor in current_tree_node.operations:
                 right_value = self.evaluate_expression(factor)
-                left_value = self.semantic_cube.get_resulting_type(left_value, right_value, op)
+                left_value = self.semantic_cube.perform_operation(left_value, right_value, op)
             return left_value
         
         elif expr_class == "Factor":
-            if isinstance(expr_tree.value, str):
+            current_tree_node = cast(Factor, current_tree_node)
+            if isinstance(current_tree_node.value, str):
                 # Check if the value is a variable
-                if self.symbol_table.is_symbol_declared(expr_tree.value, self.current_scope):
-                    return self.symbol_table.get_symbol_value(expr_tree.value, self.current_scope)
+                if self.symbol_table.is_symbol_declared(current_tree_node.value, self.current_scope):
+                    value = self.symbol_table.get_symbol(current_tree_node.value, self.current_scope).value
+                    if value is None:
+                        raise ValueError(f"Variable {current_tree_node.value} is not initialized.")
+                    return value
                 else:
-                    raise ValueError(f"Variable {expr_tree.value} is not declared.")
+                    raise ValueError(f"Variable {current_tree_node.value} is not declared.")
                 
-            elif isinstance(expr_tree.value, (int, float)):
-                if expr_tree.sign == '-':
-                    return -expr_tree.value
+            elif isinstance(current_tree_node.value, (int, float)):
+                if current_tree_node.sign == '-':
+                    return current_tree_node.value * -1
                 else:
-                    return expr_tree.value
+                    return current_tree_node.value
                 
-            elif isinstance(expr_tree.value, Expression):
-                return self.evaluate_expression(expr_tree.value)
+            elif isinstance(current_tree_node.value, Expression):
+                return self.evaluate_expression(current_tree_node.value)
             
             else:
-                raise ValueError(f"Unsupported factor type: {type(expr_tree.value)}")
+                raise ValueError(f"Unsupported factor type: {type(current_tree_node.value)}")
+        
+        else :
+            raise ValueError(f"Unsupported expression type: {expr_class}")
     
     
     def execute(self, ir):
@@ -202,7 +207,7 @@ class BabyInterpreter:
         
         # Change parameter values in the symbol table
         for i, value in enumerate(arg_values):
-            self.symbol_table.update_parameter_value(param_index=i, value=value, scope_name=self.current_scope)
+            self.symbol_table.update_parameter_value(i, value, self.current_scope)
         # Execute the function body
         function_scope = self.symbol_table.get_scope(self.current_scope)
         self.execute_body(function_scope.body)

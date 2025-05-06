@@ -1,6 +1,7 @@
 from lark import Transformer, v_args
 from lark import Lark
-from node_dataclasses import Program, Vars, VarDeclaration, Function, Param, Assign, Print, Condition, Cycle, Body, FCall, Expression, Exp, Term, Factor
+from node_dataclasses import Program, Vars, VarDeclaration, Function, Param, Assign, Print, Condition, Cycle, Body, FCall, Expression, Exp, Term, Factor, Statement
+from typing import cast, List, Any
 
 @v_args(inline=True)
 class BabyTransformer(Transformer):
@@ -15,16 +16,18 @@ class BabyTransformer(Transformer):
     """
 
     def program_no_vars_no_funcs(self, *args):
-        return Program(id=args[1], vars=None, funcs=[], body=args[-2])
+        return Program(id=args[1], vars=None, funcs=[], body=args[-2])  
     
     def program_no_vars(self, *args):
-        return Program(id=args[1], vars=None, funcs=args[3:-3], body=args[-2])
+        funcs = cast(List[Function], args[3:-3])
+        return Program(id=args[1], vars=None, funcs=funcs, body=args[-2])
     
     def program_no_funcs(self, *args):
         return Program(id=args[1], vars=args[3], funcs=[], body=args[-2])
     
     def program_all(self, *args):
-        return Program(id=args[1], vars=args[3], funcs=args[4:-3], body=args[-2])
+        funcs = cast(List[Function], args[4:-3])
+        return Program(id=args[1], vars=args[3], funcs=funcs, body=args[-2])
 
     """
     ?statement: assign -> statement_assign
@@ -60,7 +63,8 @@ class BabyTransformer(Transformer):
         | ID (COMMA ID)+ COLON type_ SEMICOLON -> var_declaration_multiple
     """
     def vars(self, var_token, *declarations):
-        return Vars(declarations=declarations)
+        decls = cast(List[VarDeclaration], declarations)
+        return Vars(declarations=decls)
     
     def var_declaration_single(self, *args):
         return VarDeclaration(type_ = args[-2], names=[args[0]])
@@ -175,24 +179,19 @@ class BabyTransformer(Transformer):
         return Body(statements=[])
     
     def body_block(self, *statements):
-        return Body(statements=list(statements[1:-1]))
+        statements = cast(List[Statement], statements)
+        return Body(statements=statements)
     
 
     """
     ?expression: exp -> expression_simple
-            | exp (comparison_op exp)+ -> expression_compound
+        | exp comparison_op exp -> expression_compound
     """
     def expression_simple(self, exp):
-        return Expression(left_expr=exp, operations=[])
+        return Expression(left_expr=exp)
     
-    def expression_compound(self, *conditions):
-        opers = []
-        for i in range(1, len(conditions), 2):
-            op = conditions[i]
-            right_expr = conditions[i+1]
-            opers.append((op, right_expr))
-
-        return Expression(left_expr=conditions[0], operations=opers)
+    def expression_compound(self, exp1, op, exp2):
+        return Expression(left_expr=exp1, op=op, right_expr=exp2)
 
     """
     ?exp: term -> exp_simple
