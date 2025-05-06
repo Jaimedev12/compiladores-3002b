@@ -122,7 +122,8 @@ class BabyTransformer(Transformer):
         return FCall(id=id, args=[])
     
     def f_call_with_args(self, id, *rest):
-        return FCall(id=id, args=list(rest[2:-2]))
+        args = cast(List[Expression], rest[1])
+        return FCall(id=id, args=args)
     
     def arguments_simple(self, expr):
         return [expr]

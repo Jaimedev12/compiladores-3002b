@@ -1,6 +1,6 @@
 from typing import cast
 from SemanticCube import SemanticCube
-from node_dataclasses import Expression, Exp, Term, Factor
+from node_dataclasses import Expression, Exp, Term, Factor, Program
 from SymbolTable import SymbolTable
 # from lark import Tree
 
@@ -125,8 +125,8 @@ class BabyInterpreter:
             self.execute_factor(ir)
 
     
-    def execute_program(self, ir):
-        if vars is not None: 
+    def execute_program(self, ir: Program):
+        if ir.vars is not None: 
             self.execute_vars(ir.vars)
         for func in ir.funcs:
             self.execute_function(func)
@@ -143,7 +143,7 @@ class BabyInterpreter:
     def execute_function(self, ir): 
         self.current_scope = ir.id
         self.symbol_table.add_function(name=ir.id, params=ir.params, body=ir.body)
-        self.execute_body(ir.body)
+        # self.execute_body(ir.body)
         self.current_scope = "global"
 
     def execute_assign(self, ir): 

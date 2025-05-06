@@ -1,0 +1,151 @@
+Parse Tree:
+program_no_funcs
+  program
+  aritmetica
+  ;
+  vars
+    var
+    var_declaration_multiple
+      a1
+      ,
+      _b
+      :
+      type_int
+      ;
+    var_declaration_multiple
+      c3
+      ,
+      _d4
+      :
+      type_float
+      ;
+  main
+  body_block
+    {
+    statement_assign
+      assign
+        a1
+        =
+        expression_simple
+          exp_simple
+            term_simple
+              factor_cte
+                int	4
+        ;
+    statement_assign
+      assign
+        _b
+        =
+        expression_simple
+          exp_simple
+            term_simple
+              factor_expression
+                (
+                expression_simple
+                  exp_sub
+                    term_simple
+                      factor_cte
+                        int	1
+                    -
+                    term_simple
+                      factor_cte
+                        int	2
+                )
+        ;
+    statement_assign
+      assign
+        c3
+        =
+        expression_simple
+          exp_simple
+            term_simple
+              factor_expression
+                (
+                expression_simple
+                  exp_simple
+                    term_simple
+                      factor_cte
+                        float	2.0
+                )
+        ;
+    statement_assign
+      assign
+        a1
+        =
+        expression_simple
+          exp_simple
+            term_simple
+              factor_cte
+                int	3
+        ;
+    statement_assign
+      assign
+        _d4
+        =
+        expression_simple
+          exp_add
+            term_simple
+              factor_cte
+                float	2.0
+            +
+            term_simple
+              factor_id	c3
+        ;
+    statement_print
+      print_single
+        print
+        (
+        print_expression
+          expression_simple
+            exp_simple
+              term_simple
+                factor_id	a1
+        )
+        ;
+    statement_print
+      print_single
+        print
+        (
+        print_expression
+          expression_simple
+            exp_simple
+              term_simple
+                factor_id	_b
+        )
+        ;
+    statement_print
+      print_single
+        print
+        (
+        print_expression
+          expression_simple
+            exp_simple
+              term_simple
+                factor_id	c3
+        )
+        ;
+    statement_print
+      print_single
+        print
+        (
+        print_expression
+          expression_simple
+            exp_simple
+              term_simple
+                factor_id	_d4
+        )
+        ;
+    }
+  end
+
+IR:
+Program(id='aritmetica', vars=Vars(declarations=(VarDeclaration(type_='int', names=['a1', '_b']), VarDeclaration(type_='float', names=['c3', '_d4']))), funcs=[], body=Body(statements=(Token('OPEN_KEY', '{'), Assign(id='a1', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=4, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)), Assign(id='_b', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=1, sign='+'), operations=[]), operations=[('-', Term(left_factor=Factor(value=2, sign='+'), operations=[]))]), op=None, right_expr=None), sign=None), operations=[]), operations=[]), op=None, right_expr=None)), Assign(id='c3', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=2.0, sign='+'), operations=[]), operations=[]), op=None, right_expr=None), sign=None), operations=[]), operations=[]), op=None, right_expr=None)), Assign(id='a1', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=3, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)), Assign(id='_d4', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=2.0, sign='+'), operations=[]), operations=[('+', Term(left_factor=Factor(value='c3', sign='+'), operations=[]))]), op=None, right_expr=None)), Print(contents=[Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='a1', sign='+'), operations=[]), operations=[]), op=None, right_expr=None)]), Print(contents=[Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='_b', sign='+'), operations=[]), operations=[]), op=None, right_expr=None)]), Print(contents=[Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='c3', sign='+'), operations=[]), operations=[]), op=None, right_expr=None)]), Print(contents=[Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='_d4', sign='+'), operations=[]), operations=[]), op=None, right_expr=None)]), Token('CLOSE_KEY', '}'))))
+
+Symbol Table:
+Symbol Table:
+Scope: global
+  a1: int = 3
+  _b: int = -1
+  c3: float = 2.0
+  _d4: float = 4.0
+

@@ -101,8 +101,6 @@ COLON: ":"
 %import common.ESCAPED_STRING
 %import common.INT
 %import common.FLOAT
-%import common.LETTER
-%import common.DIGIT
 
 
 // // Explicitly exclude your keywords from being recognized as IDs

@@ -1,0 +1,62 @@
+Parse Tree:
+program_no_funcs
+  program
+  my_program
+  ;
+  vars
+    var
+    var_declaration_single
+      x
+      :
+      type_int
+      ;
+    var_declaration_multiple
+      y
+      ,
+      z
+      :
+      type_float
+      ;
+  main
+  body_block
+    {
+    statement_assign
+      assign
+        x
+        =
+        expression_simple
+          exp_simple
+            term_simple
+              factor_cte
+                int	5
+        ;
+    statement_assign
+      assign
+        y
+        =
+        expression_simple
+          exp_simple
+            term_simple
+              factor_cte
+                float	3.14
+        ;
+    statement_print
+      print_single
+        print
+        (
+        print_string	"Hello"
+        )
+        ;
+    }
+  end
+
+IR:
+Program(id='my_program', vars=Vars(declarations=(VarDeclaration(type_='int', names=['x']), VarDeclaration(type_='float', names=['y', 'z']))), funcs=[], body=Body(statements=(Token('OPEN_KEY', '{'), Assign(id='x', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=5, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)), Assign(id='y', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=3.14, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)), Print(contents=['Hello']), Token('CLOSE_KEY', '}'))))
+
+Symbol Table:
+Symbol Table:
+Scope: global
+  x: int = 5
+  y: float = 3.14
+  z: float = None
+

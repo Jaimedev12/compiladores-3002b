@@ -143,6 +143,13 @@ class SymbolTable:
         local_scope = self.get_scope(scope_name)
         global_scope = self.get_scope("global")
         
+        for local_param in local_scope.params:
+            if local_param.name == name:
+                return True
+        for global_param in global_scope.params:
+            if global_param.name == name:
+                return True
+
         found_in_local = name in local_scope.symbols
         found_in_global = name in global_scope.symbols
         return found_in_local or found_in_global
@@ -153,5 +160,16 @@ class SymbolTable:
     def clean_params(self, function_name: str) -> None:
         function_scope = self.get_scope(function_name)
         function_scope.params = []
+
+    def to_string(self) -> str:
+        """Return a string representation of the symbol table."""
+        result = "Symbol Table:\n"
+        for scope_name, scope in self.scopes.items():
+            result += f"Scope: {scope_name}\n"
+            for symbol in scope.symbols.values():
+                result += f"  {symbol.name}: {symbol.data_type} = {symbol.value}\n"
+            for param in scope.params:
+                result += f"  Param: {param.name}: {param.data_type} = {param.value}\n"
+        return result
     
     
