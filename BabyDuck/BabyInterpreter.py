@@ -142,7 +142,7 @@ class BabyInterpreter:
 
     def execute_function(self, ir): 
         self.current_scope = ir.id
-        self.symbol_table.add_function(name=ir.id, params=ir.params, body=ir.body)
+        self.symbol_table.add_function(name=ir.id, params=ir.params, body=ir.body, vars=ir.vars)
         # self.execute_body(ir.body)
         self.current_scope = "global"
 
@@ -170,6 +170,7 @@ class BabyInterpreter:
                 # Evaluate the expression and print its value
                 expr_value = self.evaluate_expression(content)
                 print(expr_value, end=" ")
+        print()  # New line after printing all contents
 
     def execute_condition(self, ir): 
         if self.evaluate_expression(ir.condition):

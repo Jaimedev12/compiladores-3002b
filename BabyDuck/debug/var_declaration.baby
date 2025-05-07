@@ -1,0 +1,21 @@
+program simple_input;
+var x: int; y, z: float;
+
+void sum(a: int, b: float) [
+    var c: int;
+    {
+        c = 4;
+        print("The sum is: ", a+b+c);
+    }
+];
+
+main {
+    x = 5;
+    y = 3.14;
+    sum(x, y);
+    sum(y, x);
+    sum(4, 3);
+}
+
+end
+

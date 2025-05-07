@@ -1,0 +1,163 @@
+Parse Tree:
+program_all
+  program
+  simple_input
+  ;
+  vars
+    var
+    var_declaration_single
+      x
+      :
+      type_int
+      ;
+    var_declaration_multiple
+      y
+      ,
+      z
+      :
+      type_float
+      ;
+  funcs_all
+    void
+    sum
+    (
+    params_multiple
+      a
+      :
+      type_int
+      ,
+      b
+      :
+      type_float
+    )
+    [
+    vars
+      var
+      var_declaration_single
+        c
+        :
+        type_int
+        ;
+    body_block
+      {
+      statement_assign
+        assign
+          c
+          =
+          expression_simple
+            exp_simple
+              term_simple
+                factor_cte
+                  int	4
+          ;
+      statement_print
+        print_multiple
+          print
+          (
+          print_string	"The sum is: "
+          ,
+          print_expression
+            expression_simple
+              exp_add
+                term_simple
+                  factor_id	a
+                +
+                term_simple
+                  factor_id	b
+                +
+                term_simple
+                  factor_id	c
+          )
+          ;
+      }
+    ]
+    ;
+  main
+  body_block
+    {
+    statement_assign
+      assign
+        x
+        =
+        expression_simple
+          exp_simple
+            term_simple
+              factor_cte
+                int	5
+        ;
+    statement_assign
+      assign
+        y
+        =
+        expression_simple
+          exp_simple
+            term_simple
+              factor_cte
+                float	3.14
+        ;
+    statement_f_call
+      f_call_with_args
+        sum
+        (
+        arguments_multiple
+          expression_simple
+            exp_simple
+              term_simple
+                factor_id	x
+          ,
+          expression_simple
+            exp_simple
+              term_simple
+                factor_id	y
+        )
+        ;
+    statement_f_call
+      f_call_with_args
+        sum
+        (
+        arguments_multiple
+          expression_simple
+            exp_simple
+              term_simple
+                factor_id	y
+          ,
+          expression_simple
+            exp_simple
+              term_simple
+                factor_id	x
+        )
+        ;
+    statement_f_call
+      f_call_with_args
+        sum
+        (
+        arguments_multiple
+          expression_simple
+            exp_simple
+              term_simple
+                factor_cte
+                  int	4
+          ,
+          expression_simple
+            exp_simple
+              term_simple
+                factor_cte
+                  int	3
+        )
+        ;
+    }
+  end
+
+IR:
+Program(id='simple_input', vars=Vars(declarations=(VarDeclaration(type_='int', names=['x']), VarDeclaration(type_='float', names=['y', 'z']))), funcs=(Function(return_type=Token('VOID', 'void'), id='sum', params=[Param(name='a', type_='int'), Param(name='b', type_='float')], vars=Vars(declarations=(VarDeclaration(type_='int', names=['c']),)), body=Body(statements=(Token('OPEN_KEY', '{'), Assign(id='c', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=4, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)), Print(contents=['The sum is: ', Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='a', sign='+'), operations=[]), operations=[('+', Term(left_factor=Factor(value='b', sign='+'), operations=[])), ('+', Term(left_factor=Factor(value='c', sign='+'), operations=[]))]), op=None, right_expr=None)]), Token('CLOSE_KEY', '}')))),), body=Body(statements=(Token('OPEN_KEY', '{'), Assign(id='x', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=5, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)), Assign(id='y', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=3.14, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)), FCall(id='sum', args=[Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='x', sign='+'), operations=[]), operations=[]), op=None, right_expr=None), Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='y', sign='+'), operations=[]), operations=[]), op=None, right_expr=None)]), FCall(id='sum', args=[Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='y', sign='+'), operations=[]), operations=[]), op=None, right_expr=None), Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='x', sign='+'), operations=[]), operations=[]), op=None, right_expr=None)]), FCall(id='sum', args=[Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=4, sign='+'), operations=[]), operations=[]), op=None, right_expr=None), Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=3, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)]), Token('CLOSE_KEY', '}'))))
+
+Symbol Table:
+Scope: global
+  x: int = 5
+  y: float = 3.14
+  z: float = None
+Scope: sum
+  c: int = 4
+  Param: a: int = None
+  Param: b: float = None
+

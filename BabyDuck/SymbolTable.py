@@ -1,6 +1,6 @@
 from typing import Union, Optional, Any, List
 from dataclasses import dataclass
-from node_dataclasses import Param
+from node_dataclasses import Param, Vars
 
 @dataclass
 class Symbol:
@@ -93,10 +93,10 @@ class SymbolTable:
         scope = self.get_scope(scope_name)
         scope.add_symbol(symbol)
         
-    def add_variable(self, name: str, data_type: str, value=None, category="var", scope_name: str = "global", param_index: Optional[int] = None) -> None:
+    def add_variable(self, name: str, data_type: str, value: Any = None, scope_name: str = "global") -> None:
         """Add a variable to the specified scope."""
-        variable = Symbol(name=name, data_type=data_type, value=value, category=category, param_index=param_index)
-        self.add_symbol(variable, scope_name)
+        variable = Symbol(name=name, data_type=data_type, value=value, category="var")
+        self.add_symbol(variable, scope_name=scope_name)
     
     def add_parameter(self, name: str, data_type: str, scope_name: str, param_index: int) -> None:
         """Add a parameter to the specified scope."""
@@ -104,12 +104,16 @@ class SymbolTable:
         scope = self.get_scope(scope_name)
         scope.add_param(param_as_symbol)
     
-    def add_function(self, name: str, params: List[Param], body) -> None:
+    def add_function(self, name: str, params: List[Param], body, vars: Optional[Vars]) -> None:
         """Add a function as a scope"""
         self.add_scope(Scope(name, body))
         
         for i, param in enumerate(params):
             self.add_parameter(name=param.name, data_type=param.type_, scope_name=name, param_index=i)
+
+        for var_declaration in vars.declarations if vars else []:
+            for var_name in var_declaration.names:
+                self.add_variable(name=var_name, data_type=var_declaration.type_, scope_name=name)
 
     def update_symbol_value(self, name: str, value: Any, scope_name: str) -> None:
         """Update the value of a symbol in the specified scope."""
@@ -159,11 +163,12 @@ class SymbolTable:
     
     def clean_params(self, function_name: str) -> None:
         function_scope = self.get_scope(function_name)
-        function_scope.params = []
+        for param in function_scope.params:
+            param.value = None
 
     def to_string(self) -> str:
         """Return a string representation of the symbol table."""
-        result = "Symbol Table:\n"
+        result: str = ""
         for scope_name, scope in self.scopes.items():
             result += f"Scope: {scope_name}\n"
             for symbol in scope.symbols.values():

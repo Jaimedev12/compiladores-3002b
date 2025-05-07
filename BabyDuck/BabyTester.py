@@ -57,7 +57,7 @@ if __name__ == "__main__":
     # Toma todos los archivos de la carpeta ./tests, realiza el parseo y guarda
     # el output en un archivo .out por cada uno de los archivos .baby
     # en la carpeta ./output
-    tests_dir = "./tests"
+    tests_dir = "./debug"
     output_dir = "./output"
 
     if not os.path.exists(tests_dir):
