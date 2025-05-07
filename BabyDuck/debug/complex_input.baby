@@ -1,4 +1,4 @@
-program SimpleExample;
+program complex_input;
 var x, y : int; 
     result : float;
 

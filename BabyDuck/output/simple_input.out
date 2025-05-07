@@ -1,7 +1,7 @@
 Parse Tree:
 program_no_funcs
   program
-  my_program
+  simple_input
   ;
   vars
     var
@@ -51,7 +51,7 @@ program_no_funcs
   end
 
 IR:
-Program(id='my_program', vars=Vars(declarations=(VarDeclaration(type_='int', names=['x']), VarDeclaration(type_='float', names=['y', 'z']))), funcs=[], body=Body(statements=(Token('OPEN_KEY', '{'), Assign(id='x', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=5, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)), Assign(id='y', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=3.14, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)), Print(contents=['Hello']), Token('CLOSE_KEY', '}'))))
+Program(id='simple_input', vars=Vars(declarations=(VarDeclaration(type_='int', names=['x']), VarDeclaration(type_='float', names=['y', 'z']))), funcs=[], body=Body(statements=(Token('OPEN_KEY', '{'), Assign(id='x', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=5, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)), Assign(id='y', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=3.14, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)), Print(contents=['Hello']), Token('CLOSE_KEY', '}'))))
 
 Symbol Table:
 Symbol Table:
