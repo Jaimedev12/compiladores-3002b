@@ -4,10 +4,10 @@ from typing import List, Optional, Union, Tuple, Literal
 
 @dataclass
 class Quad():
-    op: str
-    buff1: Optional[Union[str, int, float]]
-    buff2: Optional[Union[str, int, float]] = None
-    storage_buff: Optional[str] = None
+    op_vdir: int
+    vdir1: Optional[int]
+    vdir2: Optional[int] = None
+    storage_vdir: Optional[int] = None
     label: Optional[str] = None
 
 @dataclass

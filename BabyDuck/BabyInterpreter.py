@@ -2,36 +2,34 @@ from dataclasses import dataclass
 from turtle import left
 from typing import cast, List, Union, Tuple, Optional
 from SemanticCube import SemanticCube
-from node_dataclasses import Expression, Exp, Term, Factor, Program, Quad
+from node_dataclasses import Expression, Exp, Term, Factor, Program, Quad, Assign
 from SymbolTable import SymbolTable
+from vdir_classes import VariableType, Operations, MemoryManager
 # from lark import Tree
 
 @dataclass
 class EvaluatingExpression:
     value: Union[int, float]
-    buffer_name: str
+    vdir: int
 
 class BabyInterpreter:
-    def __init__(self, symbol_table: SymbolTable):
+    def __init__(self, symbol_table: SymbolTable, memory_manager: MemoryManager):
         self.symbol_table = symbol_table
         self.current_scope = "global"
         self.semantic_cube = SemanticCube()
         self.quads: List[Quad] = []
-        self.buffer_index = 0
+        self.memory_manager = memory_manager
 
     def add_quad(
             self, 
-            op: str, 
-            buff1: Union[str, int, float], 
-            buff2: Optional[Union[str, int, float]] = None, 
-            storage_buff: Optional[str] = "t"
+            op: Operations, 
+            vdir1: int, 
+            vdir2: Optional[int] = None, 
+            storage_vdir: Optional[int] = None,
             ) -> Quad:
         """Add a quadruple to the list of quads."""
 
-        if (storage_buff == "t"):
-            storage_buff = f"t{self.buffer_index}"
-            self.buffer_index += 1
-        quad = Quad(op=op, buff1=buff1, buff2=buff2, storage_buff=storage_buff)
+        quad = Quad(op_vdir=op.value, vdir1=vdir1, vdir2=vdir2, storage_vdir=storage_vdir)
         self.quads.append(quad)
         return quad
 
@@ -51,22 +49,31 @@ class BabyInterpreter:
 
             if op == '>':
                 if left_value <= right_value:
-                    quad = self.add_quad(op='>', buff1=left_exp.buffer_name, buff2=right_exp.buffer_name)
-                    assert quad.storage_buff is not None
-                    return EvaluatingExpression(1, quad.storage_buff)
+                    alloc_vdir = self.memory_manager.allocate(VariableType.TEMP_INT)
+                    quad = self.add_quad(op=Operations.GREATER_THAN, vdir1=left_exp.vdir, vdir2=right_exp.vdir, storage_vdir=alloc_vdir)
+                    return EvaluatingExpression(1, alloc_vdir)
             elif op == '<':
-                quad = self.add_quad(op='>', buff1=left_exp.buffer_name, buff2=right_exp.buffer_name)
-                assert quad.storage_buff is not None
-                return EvaluatingExpression(1, quad.storage_buff)
+                if left_value >= right_value:
+                    alloc_vdir = self.memory_manager.allocate(VariableType.TEMP_INT)
+                    quad = self.add_quad(op=Operations.LESS_THAN, vdir1=left_exp.vdir, vdir2=right_exp.vdir, storage_vdir=alloc_vdir)
+                    return EvaluatingExpression(1, alloc_vdir)
             elif op == '!=':
                 if left_value != right_value:
-                    quad = self.add_quad(op='!=', buff1=left_exp.buffer_name, buff2=right_exp.buffer_name)
-                    assert quad.storage_buff is not None
-                    return EvaluatingExpression(1, quad.storage_buff)
+                    alloc_vdir = self.memory_manager.allocate(VariableType.TEMP_INT)
+                    quad = self.add_quad(op=Operations.NOT_EQUAL, vdir1=left_exp.vdir, vdir2=right_exp.vdir, storage_vdir=alloc_vdir)
+                    return EvaluatingExpression(1, alloc_vdir)
             
-            quad = self.add_quad(op=op, buff1=left_exp.buffer_name, buff2=right_exp.buffer_name)
-            assert quad.storage_buff is not None
-            return EvaluatingExpression(0, quad.storage_buff)
+            quad_op = Operations.GREATER_THAN
+            if op == '>':
+                quad_op = Operations.GREATER_THAN
+            elif op == '<': 
+                quad_op = Operations.LESS_THAN
+            elif op == '!=':
+                quad_op = Operations.NOT_EQUAL
+
+            alloc_vdir = self.memory_manager.allocate(VariableType.TEMP_INT)
+            self.add_quad(op=quad_op, vdir1=left_exp.vdir, vdir2=right_exp.vdir, storage_vdir=alloc_vdir)
+            return EvaluatingExpression(0, alloc_vdir)
             
         
         elif expr_class == "Exp":
@@ -74,10 +81,18 @@ class BabyInterpreter:
             left_exp = self.evaluate_expression(current_tree_node.left_term)
             for op, term in current_tree_node.operations:
                 right_exp = self.evaluate_expression(term)
-                quad = self.add_quad(op=op, buff1=left_exp.buffer_name, buff2=right_exp.buffer_name)
-                assert quad.storage_buff is not None
                 result_value = self.semantic_cube.perform_operation(left_exp.value, right_exp.value, op)
-                left_exp = EvaluatingExpression(result_value, quad.storage_buff)
+                result_type = result_value.__class__.__name__
+                storage_vdir = self.memory_manager.allocate(
+                    VariableType.TEMP_INT if result_type == "int" else VariableType.TEMP_FLOAT,
+                )
+                quad = self.add_quad(
+                    op=(Operations.MULT if op == '*' else Operations.DIV), 
+                    vdir1=left_exp.vdir, 
+                    vdir2=right_exp.vdir,
+                    storage_vdir=storage_vdir
+                    )
+                left_exp = EvaluatingExpression(result_value, storage_vdir)
             return left_exp
         
         elif expr_class == "Term":
@@ -85,30 +100,40 @@ class BabyInterpreter:
             left_exp = self.evaluate_expression(current_tree_node.left_factor)
             for op, factor in current_tree_node.operations:
                 right_exp = self.evaluate_expression(factor)
-                quad = self.add_quad(op=op, buff1=left_exp.buffer_name, buff2=right_exp.buffer_name)
-                assert quad.storage_buff is not None
                 result_value = self.semantic_cube.perform_operation(left_exp.value, right_exp.value, op)
-                left_exp = EvaluatingExpression(result_value, quad.storage_buff)
+                result_type = result_value.__class__.__name__
+                storage_vdir = self.memory_manager.allocate(
+                    VariableType.TEMP_INT if result_type == "int" else VariableType.TEMP_FLOAT,
+                )
+                quad = self.add_quad(
+                    op=(Operations.MULT if op == '*' else Operations.DIV), 
+                    vdir1=left_exp.vdir, 
+                    vdir2=right_exp.vdir,
+                    storage_vdir=storage_vdir
+                    )
+                left_exp = EvaluatingExpression(result_value, storage_vdir)
             return left_exp
         
         elif expr_class == "Factor":
             current_tree_node = cast(Factor, current_tree_node)
             if isinstance(current_tree_node.value, str):
                 # Check if the value is a variable
-                if self.symbol_table.is_symbol_declared(current_tree_node.value, self.current_scope):
-                    value = self.symbol_table.get_symbol(current_tree_node.value, self.current_scope).value
-                    if value is None:
-                        raise ValueError(f"Variable {current_tree_node.value} is not initialized.")
-                    return EvaluatingExpression(value, current_tree_node.value) # Stored in the symbol table
-                else:
+                if not self.symbol_table.is_symbol_declared(current_tree_node.value, self.current_scope):
                     raise ValueError(f"Variable {current_tree_node.value} is not declared.")
+                
+                symbol = self.symbol_table.get_symbol(current_tree_node.value, self.current_scope)
+                if symbol.value is None:
+                    raise ValueError(f"Variable {current_tree_node.value} is not initialized.")
+                return EvaluatingExpression(symbol.value, symbol.vdir) # Stored in the symbol table                    
                 
             elif isinstance(current_tree_node.value, (int, float)):
                 if current_tree_node.sign == '-':
-                    ans = EvaluatingExpression(current_tree_node.value * -1, str(current_tree_node.value))
+                    vdir = self.memory_manager.allocate(VariableType.CONSTANT, const_value=current_tree_node.value * -1)
+                    ans = EvaluatingExpression(current_tree_node.value * -1, vdir)
                     return ans
                 else:
-                    ans = EvaluatingExpression(current_tree_node.value, str(current_tree_node.value))
+                    vdir = self.memory_manager.allocate(VariableType.CONSTANT, const_value=current_tree_node.value)
+                    ans = EvaluatingExpression(current_tree_node.value, vdir)
                     return ans
                 
             elif isinstance(current_tree_node.value, Expression):
@@ -180,8 +205,8 @@ class BabyInterpreter:
 
     def execute_var_declaration(self, ir): 
         for var_name in ir.names:
-            self.symbol_table.add_variable(name=var_name, data_type=ir.type_, scope_name=self.current_scope)
-            self.add_quad(op='=', buff1=0, storage_buff=var_name)
+            vdir = self.symbol_table.add_variable(name=var_name, data_type=ir.type_, scope_name=self.current_scope)
+            self.add_quad(op=Operations.ASSIGN, vdir1=vdir, storage_vdir=var_name)
 
     def execute_function(self, ir): 
         self.current_scope = ir.id
@@ -190,11 +215,14 @@ class BabyInterpreter:
         self.current_scope = "global"
 
     def execute_assign(self, ir): 
+        ir = cast(Assign, ir)
+
         # 1. Evaluate expression to get the value
         expr = self.evaluate_expression(ir.expr)
         # 2. Check if variable is declared
         if not self.symbol_table.is_symbol_declared(ir.id, self.current_scope):
             raise ValueError(f"Variable {ir.id} is not declared.")
+        symbol = self.symbol_table.get_symbol(ir.id, self.current_scope)
         # 3. Check if types are compatible
         var_type = self.symbol_table.get_variable_type(ir.id, self.current_scope)
         is_valid_decl = self.semantic_cube.is_decl_valid(from_type=type(expr.value).__name__, to_type=var_type)
@@ -206,18 +234,19 @@ class BabyInterpreter:
         self.symbol_table.update_symbol_value(name=ir.id, value=resulting_value, scope_name=self.current_scope)
 
         # 5. Add quad for assignment
-        quad = self.add_quad(op='=', buff1=ir.id, buff2=expr.buffer_name, storage_buff=None)
+        self.add_quad(op=Operations.ASSIGN, vdir1=symbol.vdir, vdir2=expr.vdir)
 
     def execute_print(self, ir): 
         for content in ir.contents:
             if isinstance(content, str):
                 print(content, end=" ")
-                self.add_quad(op='print', buff1=content, storage_buff=None)
+                allocated_const = self.memory_manager.allocate(VariableType.CONSTANT)
+                self.add_quad(op=Operations.PRINT, vdir1=allocated_const)
             else:
                 # Evaluate the expression and print its value
                 expr = self.evaluate_expression(content)
                 print(expr.value, end=" ")
-                self.add_quad(op='print', buff1=expr.buffer_name, storage_buff=None)
+                self.add_quad(op=Operations.PRINT, vdir1=expr.vdir)
         print()  # New line after printing all contents
 
     def execute_condition(self, ir): 

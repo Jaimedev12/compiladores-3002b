@@ -47,31 +47,10 @@ program_no_funcs
         expression_simple
           exp_add
             term_simple
-              factor_expression
-                (
-                expression_simple
-                  exp_add
-                    term_simple
-                      factor_id	x
-                    +
-                    term_simple
-                      factor_id	y
-                )
+              factor_id	x
             +
-            term_mult
-              factor_id	y
-              *
-              factor_expression
-                (
-                expression_compound
-                  exp_simple
-                    term_simple
-                      factor_id	y
-                  comparison_op	>
-                  exp_simple
-                    term_simple
-                      factor_id	x
-                )
+            term_simple
+              factor_id	x
         ;
     statement_print
       print_single
@@ -88,25 +67,31 @@ program_no_funcs
   end
 
 IR:
-Program(id='simple_input', vars=Vars(declarations=(VarDeclaration(type_='int', names=['x']), VarDeclaration(type_='float', names=['y', 'z']))), funcs=[], body=Body(statements=(Token('OPEN_KEY', '{'), Assign(id='x', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=5, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)), Assign(id='y', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=3.14, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)), Assign(id='z', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='x', sign='+'), operations=[]), operations=[('+', Term(left_factor=Factor(value='y', sign='+'), operations=[]))]), op=None, right_expr=None), sign=None), operations=[]), operations=[('+', Term(left_factor=Factor(value='y', sign='+'), operations=[('*', Factor(value=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='y', sign='+'), operations=[]), operations=[]), op='>', right_expr=Exp(left_term=Term(left_factor=Factor(value='x', sign='+'), operations=[]), operations=[])), sign=None))]))]), op=None, right_expr=None)), Print(contents=[Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='z', sign='+'), operations=[]), operations=[]), op=None, right_expr=None)]), Token('CLOSE_KEY', '}'))))
+Program(id='simple_input', vars=Vars(declarations=(VarDeclaration(type_='int', names=['x']), VarDeclaration(type_='float', names=['y', 'z']))), funcs=[], body=Body(statements=(Token('OPEN_KEY', '{'), Assign(id='x', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=5, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)), Assign(id='y', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=3.14, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)), Assign(id='z', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='x', sign='+'), operations=[]), operations=[('+', Term(left_factor=Factor(value='x', sign='+'), operations=[]))]), op=None, right_expr=None)), Print(contents=[Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='z', sign='+'), operations=[]), operations=[]), op=None, right_expr=None)]), Token('CLOSE_KEY', '}'))))
 
 Symbol Table:
 Scope: global
   x: int = 5
   y: float = 3.14
-  z: float = 11.280000000000001
+  z: float = 10.0
 
 
 Quads:
-= 0 None x
-= 0 None y
-= 0 None z
-= x 5 None
-= y 3.14 None
-+ x y t0
-> y x t1
-* y t1 t2
-+ t0 t2 t3
-= z t3 None
-print z None None
+8 1000 1000 x
+8 2000 2000 y
+8 2001 2001 z
+8 1000 1000 None
+8 2000 2000 None
+4 1000 1000 5000
+8 2001 2001 None
+9 2001 2001 None
+--------
+Operations.ASSIGN 1000 1000 x
+Operations.ASSIGN 2000 2000 y
+Operations.ASSIGN 2001 2001 z
+Operations.ASSIGN 1000 1000 None
+Operations.ASSIGN 2000 2000 None
+Operations.DIV 1000 1000 5000
+Operations.ASSIGN 2001 2001 None
+Operations.PRINT 2001 2001 None
 

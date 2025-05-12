@@ -6,6 +6,8 @@ from lark import Lark, logger, UnexpectedInput
 from BabyTransformer import BabyTransformer
 from BabyInterpreter import BabyInterpreter
 from SymbolTable import SymbolTable
+from vdir_classes import MemoryManager
+from vdir_classes import VariableType, Operations
 
 logger.setLevel(logging.DEBUG)
 
@@ -24,15 +26,15 @@ baby = babyParser.parse
 
 def parse_code(input_code):
     try:
-        # clear console
-        # print("\033[H\033[J", end="")
 
         # Parse the input code
         tree = baby(input_code)
         # print(tree.pretty())
 
+        memory_manager = MemoryManager()
+
         # Initialize the symbol table
-        symbol_table = SymbolTable()
+        symbol_table = SymbolTable(memory_manager=memory_manager)
 
         # Transform the parse tree using BabyTransformer
         baby_transformer = BabyTransformer()
@@ -40,7 +42,7 @@ def parse_code(input_code):
         # print(ir)
 
         # Execute the IR
-        baby_interpreter = BabyInterpreter(symbol_table)
+        baby_interpreter = BabyInterpreter(symbol_table, memory_manager=memory_manager)
         baby_interpreter.execute(ir)
 
         # Display the symbol table after execution
@@ -89,13 +91,13 @@ if __name__ == "__main__":
                     output_file.write("\n")
                     output_file.write("\nQuads:\n")
                     for quad in quads:
-                        output_file.write(f"{quad.op} {quad.buff1} {quad.buff2} {quad.storage_buff}")
-                        # output_file.write(f"{quad.op} {quad.buff1}")
-                        
-                        # if quad.buff2:
-                        #     output_file.write(f" {quad.buff2}")
-                        # if quad.storage_buff:
-                        #     output_file.write(f" {quad.storage_buff}")
+                        output_file.write(f"{quad.op_vdir} {quad.vdir1} {quad.vdir1} {quad.storage_vdir}")
+                        if quad.label:
+                            output_file.write(f" -> {quad.label}")
+                        output_file.write("\n")
+                    output_file.write("--------\n")
+                    for quad in quads:
+                        output_file.write(f"{Operations(quad.op_vdir)} {quad.vdir1} {quad.vdir1} {quad.storage_vdir}")
                         if quad.label:
                             output_file.write(f" -> {quad.label}")
                         output_file.write("\n")
