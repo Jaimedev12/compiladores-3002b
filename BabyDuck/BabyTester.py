@@ -3,7 +3,6 @@ import sys
 import os
 import contextlib
 from lark import Lark, logger, UnexpectedInput
-from numpy import test
 from BabyTransformer import BabyTransformer
 from BabyInterpreter import BabyInterpreter
 from SymbolTable import SymbolTable
@@ -48,7 +47,7 @@ def parse_code(input_code):
         # print("\nSymbol Table after execution:")
         # symbol_table.display()
 
-        return (tree.pretty(), ir, symbol_table.to_string())
+        return (tree.pretty(), ir, symbol_table.to_string(), baby_interpreter.quads)
     except UnexpectedInput as e:
         print(f"Parsing failed: {e}")
         raise e  # Re-raise the exception for further handling
@@ -57,7 +56,7 @@ if __name__ == "__main__":
     # Toma todos los archivos de la carpeta ./tests, realiza el parseo y guarda
     # el output en un archivo .out por cada uno de los archivos .baby
     # en la carpeta ./output
-    tests_dir = "./tests"
+    tests_dir = "./debug"
     output_dir = "./output"
 
     if not os.path.exists(tests_dir):
@@ -66,28 +65,45 @@ if __name__ == "__main__":
         os.makedirs(output_dir)
 
     for filename in os.listdir(tests_dir):
-        if filename.endswith(".baby"):
-            base_name = os.path.splitext(filename)[0]
-            log_filename = os.path.join(output_dir, f"{base_name}.log")
-            input_filename = os.path.join(tests_dir, filename)
-            output_filename = os.path.join(output_dir, f"{base_name}.out")
-            
-            with open(log_filename, "w", encoding="utf-8") as log_file:
-                with contextlib.redirect_stdout(log_file):
-                    with open(input_filename, 'r', encoding='utf-8') as input_file:
-                        program = input_file.read()
-                        tree, ir, symbol_table_string = parse_code(program)
-                    
-                    with open(output_filename, 'w', encoding='utf-8') as output_file:
-                        output_file.write("Parse Tree:\n")
-                        output_file.write(str(tree))
-                        output_file.write("\nIR:\n")
-                        output_file.write(str(ir))
-                        output_file.write("\n\nSymbol Table:\n")
-                        output_file.write(symbol_table_string)
-                        output_file.write("\n")
+        if not filename.endswith(".baby"):
+            continue
 
-            sys.stdout = sys.__stdout__
+        base_name = os.path.splitext(filename)[0]
+        log_filename = os.path.join(output_dir, f"{base_name}.log")
+        input_filename = os.path.join(tests_dir, filename)
+        output_filename = os.path.join(output_dir, f"{base_name}.out")
+        
+        with open(log_filename, "w", encoding="utf-8") as log_file:
+            with contextlib.redirect_stdout(log_file):
+                with open(input_filename, 'r', encoding='utf-8') as input_file:
+                    program = input_file.read()
+                    tree, ir, symbol_table_string, quads = parse_code(program)
+                
+                with open(output_filename, 'w', encoding='utf-8') as output_file:
+                    output_file.write("Parse Tree:\n")
+                    output_file.write(str(tree))
+                    output_file.write("\nIR:\n")
+                    output_file.write(str(ir))
+                    output_file.write("\n\nSymbol Table:\n")
+                    output_file.write(symbol_table_string)
+                    output_file.write("\n")
+                    output_file.write("\nQuads:\n")
+                    for quad in quads:
+                        output_file.write(f"{quad.op} {quad.buff1} {quad.buff2} {quad.storage_buff}")
+                        # output_file.write(f"{quad.op} {quad.buff1}")
+                        
+                        # if quad.buff2:
+                        #     output_file.write(f" {quad.buff2}")
+                        # if quad.storage_buff:
+                        #     output_file.write(f" {quad.storage_buff}")
+                        if quad.label:
+                            output_file.write(f" -> {quad.label}")
+                        output_file.write("\n")
+                    output_file.write("\n")
+
+                    
+
+        sys.stdout = sys.__stdout__
     # Si se pasa un archivo como argumento, lo parsea y ejecuta
     # el programa, mostrando el resultado en la consola
     # if args.input_file:

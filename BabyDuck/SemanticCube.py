@@ -1,4 +1,4 @@
-from turtle import left
+from typing import Union
 
 
 class SemanticCube:
@@ -68,7 +68,7 @@ class SemanticCube:
 
         return self.cube[type1][type2][operation]
     
-    def perform_operation(self, left_value, right_value, operation) -> int | float:
+    def perform_operation(self, left_value: Union[float, int], right_value: Union[float, int], operation) -> int | float:
         """
         Perform the operation between two values.
         

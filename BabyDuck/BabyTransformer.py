@@ -293,6 +293,9 @@ class BabyTransformer(Transformer):
     def ID(self, id):
         return str(id)
     
+    def comparison_op(self, op):
+        return str(op)
+    
     
 # Load the grammar and create the parser
 def get_parser():

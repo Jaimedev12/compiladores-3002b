@@ -1,0 +1,10 @@
+program simple_input;
+var x: int; y, z: float;
+main {
+    x = 5;
+    y = 3.14;
+    z = (x + y) + y * (y > x);
+    print(z);
+}
+
+end

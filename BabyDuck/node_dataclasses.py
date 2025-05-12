@@ -3,6 +3,14 @@ from turtle import right
 from typing import List, Optional, Union, Tuple, Literal
 
 @dataclass
+class Quad():
+    op: str
+    buff1: Optional[Union[str, int, float]]
+    buff2: Optional[Union[str, int, float]] = None
+    storage_buff: Optional[str] = None
+    label: Optional[str] = None
+
+@dataclass
 class Expression():
     left_expr: 'Exp'
     op : Optional[Union[Literal["<"], Literal[">"], Literal["!="]]] = None  # Operator for the expression (e.g., '==', '!=', '<', '>')
