@@ -45,12 +45,10 @@ cycle: WHILE OPEN_PAREN expression CLOSE_PAREN DO body SEMICOLON
 ?expression: exp -> expression_simple
         | exp comparison_op exp -> expression_compound
 ?exp: term -> exp_simple
-        | term (SUB term)+ -> exp_sub
-        | term (ADD term)+ -> exp_add
-
+        | term ((SUB | ADD) term)+ -> exp_compound
 ?term: factor -> term_simple
-        | factor (MULT factor)+ -> term_mult
-        | factor (DIV factor)+ -> term_div
+        | factor ((MULT | DIV) factor)+ -> term_compound
+
 ?factor: OPEN_PAREN expression CLOSE_PAREN -> factor_expression
         | cte -> factor_cte
         | ID -> factor_id

@@ -180,7 +180,7 @@ class BabyTransformer(Transformer):
         return Body(statements=[])
     
     def body_block(self, *statements):
-        statements = cast(List[Statement], statements)
+        statements = cast(List[Statement], statements[1:-1])
         return Body(statements=statements)
     
 
@@ -196,48 +196,33 @@ class BabyTransformer(Transformer):
 
     """
     ?exp: term -> exp_simple
-            | term (SUB term)+ -> exp_sub
-            | term (ADD term)+ -> exp_add
+        | term ((SUB | ADD) term)+ -> exp_compound
     """
     def exp_simple(self, term):
         return Exp(left_term=term, operations=[])
     
-    def exp_sub(self, *terms):
+    def exp_compound(self, *terms):
         opers = []
         for i in range(1, len(terms), 2):
+            op = terms[i]
             term = terms[i+1]
-            opers.append(('-', term))
-        return Exp(left_term=terms[0], operations=opers)
-    
-    def exp_add(self, *terms):
-        opers = []
-        for i in range(1, len(terms), 2):
-            term = terms[i+1]
-            opers.append(('+', term))
+            opers.append((op, term))
         return Exp(left_term=terms[0], operations=opers)
 
     """
     ?term: factor -> term_simple
-            | factor (MULT factor)+ -> term_mult
-            | factor (DIV factor)+ -> term_div     
+        | factor ((MULT | DIV) factor)+ -> term_compound
     """
     def term_simple(self, factor):
         return Term(left_factor=factor, operations=[])
     
-    def term_mult(self, *factors):
+    def term_compound(self, *factors):
         opers = []
         for i in range(1, len(factors), 2):
+            op = factors[i]
             term = factors[i+1]
-            opers.append(('*', term))
+            opers.append((op, term))
         return Term(left_factor=factors[0], operations=opers)
-    
-    def term_div(self, *factors):
-        opers = []
-        for i in range(1, len(factors), 2):
-            term = factors[i+1]
-            opers.append(('/', term))
-        return Term(left_factor=factors[0], operations=opers)
-    
     
     """
     ?factor: OPEN_PAREN expression CLOSE_PAREN -> factor_expression

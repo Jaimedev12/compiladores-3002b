@@ -45,10 +45,13 @@ program_no_funcs
         z
         =
         expression_simple
-          exp_add
+          exp_compound
             term_simple
               factor_id	x
             +
+            term_simple
+              factor_id	x
+            -
             term_simple
               factor_id	x
         ;
@@ -67,13 +70,13 @@ program_no_funcs
   end
 
 IR:
-Program(id='simple_input', vars=Vars(declarations=(VarDeclaration(type_='int', names=['x']), VarDeclaration(type_='float', names=['y', 'z']))), funcs=[], body=Body(statements=(Token('OPEN_KEY', '{'), Assign(id='x', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=5, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)), Assign(id='y', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=3.14, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)), Assign(id='z', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='x', sign='+'), operations=[]), operations=[('+', Term(left_factor=Factor(value='x', sign='+'), operations=[]))]), op=None, right_expr=None)), Print(contents=[Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='z', sign='+'), operations=[]), operations=[]), op=None, right_expr=None)]), Token('CLOSE_KEY', '}'))))
+Program(id='simple_input', vars=Vars(declarations=(VarDeclaration(type_='int', names=['x']), VarDeclaration(type_='float', names=['y', 'z']))), funcs=[], body=Body(statements=(Assign(id='x', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=5, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)), Assign(id='y', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=3.14, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)), Assign(id='z', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='x', sign='+'), operations=[]), operations=[(Token('ADD', '+'), Term(left_factor=Factor(value='x', sign='+'), operations=[])), (Token('SUB', '-'), Term(left_factor=Factor(value='x', sign='+'), operations=[]))]), op=None, right_expr=None)), Print(contents=[Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='z', sign='+'), operations=[]), operations=[]), op=None, right_expr=None)]))))
 
 Symbol Table:
 Scope: global
   x: int = 5
   y: float = 3.14
-  z: float = 10.0
+  z: float = 5.0
 
 
 Quads:
@@ -83,6 +86,7 @@ Quads:
 8 1000 1000 None
 8 2000 2000 None
 4 1000 1000 5000
+4 5000 5000 5001
 8 2001 2001 None
 9 2001 2001 None
 --------
@@ -92,6 +96,7 @@ Operations.ASSIGN 2001 2001 z
 Operations.ASSIGN 1000 1000 None
 Operations.ASSIGN 2000 2000 None
 Operations.DIV 1000 1000 5000
+Operations.DIV 5000 5000 5001
 Operations.ASSIGN 2001 2001 None
 Operations.PRINT 2001 2001 None
 
