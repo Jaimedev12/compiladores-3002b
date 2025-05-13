@@ -2,6 +2,7 @@ from lark import Transformer, v_args
 from lark import Lark
 from node_dataclasses import Program, Vars, VarDeclaration, Function, Param, Assign, Print, Condition, Cycle, Body, FCall, Expression, Exp, Term, Factor, Statement
 from typing import cast, List, Any
+from MemoryManager import Operations
 
 @v_args(inline=True)
 class BabyTransformer(Transformer):
@@ -204,7 +205,10 @@ class BabyTransformer(Transformer):
     def exp_compound(self, *terms):
         opers = []
         for i in range(1, len(terms), 2):
-            op = terms[i]
+            op_token = terms[i]
+            op = Operations.PLUS
+            if op_token == '-':
+                op = Operations.MINUS
             term = terms[i+1]
             opers.append((op, term))
         return Exp(left_term=terms[0], operations=opers)
@@ -219,7 +223,10 @@ class BabyTransformer(Transformer):
     def term_compound(self, *factors):
         opers = []
         for i in range(1, len(factors), 2):
-            op = factors[i]
+            op_token = factors[i]
+            op = Operations.MULT
+            if op_token == '/':
+                op = Operations.DIV
             term = factors[i+1]
             opers.append((op, term))
         return Term(left_factor=factors[0], operations=opers)

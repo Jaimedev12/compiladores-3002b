@@ -44,12 +44,12 @@ program_no_funcs
   end
 
 IR:
-Program(id='simple_input', vars=Vars(declarations=(VarDeclaration(type_='int', names=['x', 'y']),)), funcs=[], body=Body(statements=(Assign(id='x', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=5, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)), Assign(id='y', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='x', sign='+'), operations=[]), operations=[(Token('ADD', '+'), Term(left_factor=Factor(value=2, sign='+'), operations=[(Token('MULT', '*'), Factor(value='x', sign='+'))]))]), op=None, right_expr=None)))))
+Program(id='simple_input', vars=Vars(declarations=(VarDeclaration(type_='int', names=['x', 'y']),)), funcs=[], body=Body(statements=(Assign(id='x', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=5, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)), Assign(id='y', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='x', sign='+'), operations=[]), operations=[(<Operations.PLUS: 1>, Term(left_factor=Factor(value=2, sign='+'), operations=[(<Operations.MULT: 3>, Factor(value='x', sign='+'))]))]), op=None, right_expr=None)))))
 
 Symbol Table:
 Scope: global
-  x: int = 5
-  y: int = 15
+  x: int = None
+  y: int = None
 
 
 Quads:

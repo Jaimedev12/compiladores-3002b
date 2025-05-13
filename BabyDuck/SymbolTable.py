@@ -1,12 +1,12 @@
 from typing import Union, Optional, Any, List, Dict
 from dataclasses import dataclass
-from node_dataclasses import Param, Vars, Body
-from vdir_classes import MemoryManager, VariableType
+from node_dataclasses import Param, Vars, Body, VariableType
+from MemoryManager import MemoryManager, AllocCategory
 
 @dataclass
 class Symbol:
     name: str
-    data_type: str
+    data_type: VariableType
     vdir: int
     value: Optional[Union[int, float]] = None
     category: str = "var"
@@ -37,7 +37,6 @@ class Scope:
         self.symbols[symbol.name] = symbol
         self.symbols_v_dir[symbol.vdir] = symbol
 
-    
 
 class SymbolTable:
     def __init__(self, memory_manager: MemoryManager):
@@ -96,10 +95,13 @@ class SymbolTable:
         else:
             raise ValueError(f"Symbol {name} not found in {scope_name} or global scope.")
     
-    def get_variable_type(self, name: str, scope_name: str) -> Optional[str]:
+    def get_variable_type(self, name: str, scope_name: str) -> VariableType:
         """Get the type of a variable in the specified scope."""
         var = self.get_variable_by_name(name, scope_name)
-        return var.data_type if var else None
+        if var is None:
+            raise ValueError(f"Variable {name} not found in {scope_name}.")
+        
+        return var.data_type
 
     def add_scope(self, scope: Scope) -> None:
         if scope.name in self.scopes:
@@ -115,17 +117,17 @@ class SymbolTable:
         vdir = 0
         if scope_name == "global":
             if data_type == "int":
-                vdir = self.scopes[scope_name].memory_manager.allocate(var_type=VariableType.GLOBAL_INT)
+                vdir = self.scopes[scope_name].memory_manager.allocate(var_type=AllocCategory.GLOBAL_INT)
             elif data_type == "float":
-                vdir = self.scopes[scope_name].memory_manager.allocate(var_type=VariableType.GLOBAL_FLOAT)
+                vdir = self.scopes[scope_name].memory_manager.allocate(var_type=AllocCategory.GLOBAL_FLOAT)
             else:
                 raise ValueError(f"Invalid data type {data_type} for global variable.")
 
         else:
             if data_type == "int":
-                vdir = self.scopes[scope_name].memory_manager.allocate(var_type=VariableType.LOCAL_INT, local_name=scope_name)
+                vdir = self.scopes[scope_name].memory_manager.allocate(var_type=AllocCategory.LOCAL_INT, local_name=scope_name)
             elif data_type == "float":
-                vdir = self.scopes[scope_name].memory_manager.allocate(var_type=VariableType.LOCAL_FLOAT, local_name=scope_name)
+                vdir = self.scopes[scope_name].memory_manager.allocate(var_type=AllocCategory.LOCAL_FLOAT, local_name=scope_name)
             else:
                 raise ValueError(f"Invalid data type {data_type} for local variable.")
 
@@ -139,17 +141,17 @@ class SymbolTable:
         vdir = 0
         if scope_name == "global":
             if data_type == "int":
-                vdir = self.scopes[scope_name].memory_manager.allocate(var_type=VariableType.GLOBAL_INT)
+                vdir = self.scopes[scope_name].memory_manager.allocate(var_type=AllocCategory.GLOBAL_INT)
             elif data_type == "float":
-                vdir = self.scopes[scope_name].memory_manager.allocate(var_type=VariableType.GLOBAL_FLOAT)
+                vdir = self.scopes[scope_name].memory_manager.allocate(var_type=AllocCategory.GLOBAL_FLOAT)
             else:
                 raise ValueError(f"Invalid data type {data_type} for global variable.")
 
         else:
             if data_type == "int":
-                vdir = self.scopes[scope_name].memory_manager.allocate(var_type=VariableType.LOCAL_INT, local_name=scope_name)
+                vdir = self.scopes[scope_name].memory_manager.allocate(var_type=AllocCategory.LOCAL_INT, local_name=scope_name)
             elif data_type == "float":
-                vdir = self.scopes[scope_name].memory_manager.allocate(var_type=VariableType.LOCAL_FLOAT, local_name=scope_name)
+                vdir = self.scopes[scope_name].memory_manager.allocate(var_type=AllocCategory.LOCAL_FLOAT, local_name=scope_name)
             else:
                 raise ValueError(f"Invalid data type {data_type} for local variable.")
 
@@ -169,33 +171,33 @@ class SymbolTable:
             for var_name in var_declaration.names:
                 self.add_variable(name=var_name, data_type=var_declaration.type_, scope_name=name)
 
-    def update_symbol_value(self, name: str, value: Any, scope_name: str) -> None:
-        """Update the value of a symbol in the specified scope."""
-        local_scope = self.get_scope(scope_name)
-        global_scope = self.get_scope("global")
+    # def update_symbol_value(self, name: str, value: Any, scope_name: str) -> None:
+    #     """Update the value of a symbol in the specified scope."""
+    #     local_scope = self.get_scope(scope_name)
+    #     global_scope = self.get_scope("global")
         
-        param_names = [param.name for param in local_scope.params]
-        for i, param_name in enumerate(param_names):
-            if param_name == name:
-                local_scope.params[i].value = value
-                return
+    #     param_names = [param.name for param in local_scope.params]
+    #     for i, param_name in enumerate(param_names):
+    #         if param_name == name:
+    #             local_scope.params[i].value = value
+    #             return
         
-        if name in local_scope.symbols:
-            local_scope.symbols[name].value = value
+    #     if name in local_scope.symbols:
+    #         local_scope.symbols[name].value = value
             
-        elif name in global_scope.symbols:
-            global_scope.symbols[name].value = value
+    #     elif name in global_scope.symbols:
+    #         global_scope.symbols[name].value = value
             
-        else:
-            raise ValueError(f"Symbol {name} not found in {scope_name} or global scope.")
+    #     else:
+    #         raise ValueError(f"Symbol {name} not found in {scope_name} or global scope.")
 
-    def update_parameter_value(self, param_index: int, value: Any, function_name: str) -> None:
-        function_scope = self.get_scope(function_name)
+    # def update_parameter_value(self, param_index: int, value: Any, function_name: str) -> None:
+    #     function_scope = self.get_scope(function_name)
         
-        if len(function_scope.params) <= param_index:
-            raise ValueError(f"Function {function_name} only has {len(function_scope.params)} parameters.")
+    #     if len(function_scope.params) <= param_index:
+    #         raise ValueError(f"Function {function_name} only has {len(function_scope.params)} parameters.")
         
-        function_scope.params[param_index].value = value
+    #     function_scope.params[param_index].value = value
 
     def is_symbol_declared(self, name: str, scope_name: str) -> bool:
         local_scope = self.get_scope(scope_name)
@@ -215,10 +217,10 @@ class SymbolTable:
     def is_function_declared(self, name: str) -> bool:
         return name in self.scopes and self.scopes[name].body is not None
     
-    def clean_params(self, function_name: str) -> None:
-        function_scope = self.get_scope(function_name)
-        for param in function_scope.params:
-            param.value = None
+    # def clean_params(self, function_name: str) -> None:
+    #     function_scope = self.get_scope(function_name)
+    #     for param in function_scope.params:
+    #         param.value = None
 
     def to_string(self) -> str:
         """Return a string representation of the symbol table."""

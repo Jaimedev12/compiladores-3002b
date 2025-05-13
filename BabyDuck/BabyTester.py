@@ -6,8 +6,7 @@ from lark import Lark, logger, UnexpectedInput
 from BabyTransformer import BabyTransformer
 from BabyInterpreter import BabyInterpreter
 from SymbolTable import SymbolTable
-from vdir_classes import MemoryManager
-from vdir_classes import VariableType, Operations
+from MemoryManager import MemoryManager, Operations, AllocCategory
 
 logger.setLevel(logging.DEBUG)
 
@@ -24,24 +23,17 @@ with open('grammar.lark', 'r') as file:
 babyParser = Lark(grammar, start='start', parser='lalr', debug=True)
 baby = babyParser.parse
 
-def get_symbol_name(symbol_table: SymbolTable, memory_manager: MemoryManager, vdir: int) -> str:
-    """
-    Get the symbol information from the symbol table and memory manager.
-    """
-
-    if vdir < 1000:
+def get_symbol_name(symbol_table: SymbolTable, mem_mgr: MemoryManager, vdir: int) -> str:
+    if vdir < mem_mgr.address_ranges[AllocCategory.GLOBAL_INT].start:
         raise ValueError("Invalid variable directory (vdir)")
-    if vdir < 5000:
-        # Global Int
+    if vdir < mem_mgr.address_ranges[AllocCategory.TEMP_INT].start:
         return symbol_table.get_variable(vdir).name
-    if vdir < 6000:
-        return "ti"+str(vdir-5000)
-        # Temp Int
-    if vdir < 7000:
-        return "tf"+str(vdir-6000)
+    if vdir <= mem_mgr.address_ranges[AllocCategory.TEMP_INT].end:
+        return "ti"+str(vdir-mem_mgr.address_ranges[AllocCategory.TEMP_INT].start)
+    if vdir <= mem_mgr.address_ranges[AllocCategory.TEMP_FLOAT].end:
+        return "tf"+str(vdir-mem_mgr.address_ranges[AllocCategory.TEMP_FLOAT].start)
     else:
-        return str(memory_manager.constants[vdir])
-
+        return str(mem_mgr.constants[vdir])
     
 
 def parse_code(input_code, memory_manager: MemoryManager, symbol_table: SymbolTable):
@@ -58,7 +50,7 @@ def parse_code(input_code, memory_manager: MemoryManager, symbol_table: SymbolTa
 
         # Execute the IR
         baby_interpreter = BabyInterpreter(symbol_table, memory_manager=memory_manager)
-        baby_interpreter.execute(ir)
+        baby_interpreter.generate_quads(ir)
 
         # Display the symbol table after execution
         # print("\nSymbol Table after execution:")

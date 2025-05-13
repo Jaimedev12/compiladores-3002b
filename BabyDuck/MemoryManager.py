@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, Optional, Set, Union
+from typing import Dict, Literal, Optional, Set, Union
 
-class VariableType(Enum):
+class AllocCategory(Enum):
     GLOBAL_INT = 1
     GLOBAL_FLOAT = 2
     LOCAL_INT = 3
@@ -31,13 +31,13 @@ class AddressRange:
 class MemoryManager:
     def __init__(self):
         self.address_ranges = {
-            VariableType.GLOBAL_INT: AddressRange(1000, 1999, 1000),
-            VariableType.GLOBAL_FLOAT: AddressRange(2000, 2999, current=2000),
-            VariableType.LOCAL_INT: AddressRange(3000, 3999, current=3000),
-            VariableType.LOCAL_FLOAT: AddressRange(4000, 4999, current=4000),
-            VariableType.TEMP_INT: AddressRange(5000, 5999, 5000),
-            VariableType.TEMP_FLOAT: AddressRange(6000, 6999, 6000),
-            VariableType.CONSTANT: AddressRange(7000, 7999, 7000),
+            AllocCategory.GLOBAL_INT: AddressRange(1000, 1999, 1000),
+            AllocCategory.GLOBAL_FLOAT: AddressRange(2000, 2999, current=2000),
+            AllocCategory.LOCAL_INT: AddressRange(3000, 3999, current=3000),
+            AllocCategory.LOCAL_FLOAT: AddressRange(4000, 4999, current=4000),
+            AllocCategory.TEMP_INT: AddressRange(5000, 5999, 5000),
+            AllocCategory.TEMP_FLOAT: AddressRange(6000, 6999, 6000),
+            AllocCategory.CONSTANT: AddressRange(7000, 7999, 7000),
         }
 
         self.current_per_local: Dict[str, int] = dict()
@@ -47,7 +47,9 @@ class MemoryManager:
         self.constants_float: Dict[float, int] = dict()
         self.constants: Dict[int, Union[int, float, str]] = dict()
 
-    def _allocate_local(self, local_name: Optional[str], var_type: VariableType) -> int:
+
+
+    def _allocate_local(self, local_name: Optional[str], var_type: AllocCategory) -> int:
         if local_name is None:
             raise ValueError("Local name must be provided for local variables.")
         if local_name not in self.current_per_local:
@@ -64,7 +66,7 @@ class MemoryManager:
     def _allocate_constant(self, value: Optional[Union[int, float, str]]) -> int:
         if value is None:
             raise ValueError("Constant value must be provided for constant variables.")
-        address = self.address_ranges[VariableType.CONSTANT].current
+        address = self.address_ranges[AllocCategory.CONSTANT].current
         
         if isinstance(value, str):
             if value in self.constants_string.keys():
@@ -85,20 +87,20 @@ class MemoryManager:
                 self.constants_float[value] = address
 
         self.constants[address] = value
-        self.address_ranges[VariableType.CONSTANT].current += 1
+        self.address_ranges[AllocCategory.CONSTANT].current += 1
         return address
 
 
     def allocate(
             self, 
-            var_type: VariableType, 
+            var_type: AllocCategory, 
             local_name: Optional[str] = None, 
             const_value: Optional[Union[int, float, str]] = None
             ) -> int:
-        if var_type == VariableType.LOCAL_INT or var_type == VariableType.LOCAL_FLOAT:
+        if var_type == AllocCategory.LOCAL_INT or var_type == AllocCategory.LOCAL_FLOAT:
             return self._allocate_local(local_name, var_type)
 
-        if var_type == VariableType.CONSTANT:
+        if var_type == AllocCategory.CONSTANT:
             return self._allocate_constant(const_value)
         if var_type not in self.address_ranges:
             raise ValueError(f"Invalid variable type: {var_type}")
@@ -110,3 +112,35 @@ class MemoryManager:
         address = range_info.current
         range_info.current += 1
         return address
+    
+    def get_address_type(self, address: int) -> Union[Literal["int"], Literal["float"], Literal["str"]]:
+
+        if address < self.address_ranges[AllocCategory.GLOBAL_INT].start \
+            or address > self.address_ranges[AllocCategory.CONSTANT].end:
+            raise ValueError("Invalid address")
+        elif address < self.address_ranges[AllocCategory.GLOBAL_INT].end:
+            return "int"
+        elif address < self.address_ranges[AllocCategory.GLOBAL_FLOAT].end:
+            return "float"
+        elif address < self.address_ranges[AllocCategory.LOCAL_INT].end:
+            return "int"
+        elif address < self.address_ranges[AllocCategory.LOCAL_FLOAT].end:
+            return "float"
+        elif address < self.address_ranges[AllocCategory.TEMP_INT].end:
+            return "int"
+        elif address < self.address_ranges[AllocCategory.TEMP_FLOAT].end:
+            return "float"
+        elif address < self.address_ranges[AllocCategory.CONSTANT].end:
+            constant = self.constants.get(address)
+            if constant is None:
+                raise ValueError(f"Address {address} does not exist in constants")
+            if isinstance(constant, str):
+                return "str"
+            if isinstance(constant, int):
+                return "int"
+            if isinstance(constant, float):
+                return "float"
+            else:
+                raise ValueError(f"Invalid constant type: {type(constant)}")
+        else:
+            raise ValueError(f"Invalid address: {address}")

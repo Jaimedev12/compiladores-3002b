@@ -1,6 +1,11 @@
 from dataclasses import dataclass, field
+from tkinter import Variable
 from turtle import right
 from typing import List, Optional, Union, Tuple, Literal
+from MemoryManager import Operations
+
+ValueType = Literal["int", "float", "str"]
+VariableType = Literal["int", "float"]
 
 @dataclass
 class Quad():
@@ -13,21 +18,21 @@ class Quad():
 @dataclass
 class Expression():
     left_expr: 'Exp'
-    op : Optional[Union[Literal["<"], Literal[">"], Literal["!="]]] = None  # Operator for the expression (e.g., '==', '!=', '<', '>')
+    op : Optional[Union[Literal[Operations.GREATER_THAN], Literal[Operations.LESS_THAN], Literal[Operations.NOT_EQUAL]]] = None
     right_expr: Optional['Exp'] = None  # Right-hand side expression (if any)
 
 @dataclass
 class Exp():
     left_term: 'Term'
     operations : List[ \
-        Tuple[Union[Literal["+"], Literal["-"]], 'Term'] \
+        Tuple[Union[Literal[Operations.PLUS], Literal[Operations.MINUS]], 'Term'] \
         ] = field(default_factory=list)  # List of tuples (operator, term)
 
 @dataclass
 class Term():
     left_factor: 'Factor'
     operations: List[ \
-        Tuple[Union[Literal["*"], Literal["/"]], 'Factor'] \
+        Tuple[Union[Literal[Operations.MULT], Literal[Operations.DIV]], 'Factor'] \
         ] = field(default_factory=list)  # List of tuples (operator, factor)
 
 @dataclass
