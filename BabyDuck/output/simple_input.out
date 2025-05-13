@@ -5,17 +5,12 @@ program_no_funcs
   ;
   vars
     var
-    var_declaration_single
+    var_declaration_multiple
       x
+      ,
+      y
       :
       type_int
-      ;
-    var_declaration_multiple
-      y
-      ,
-      z
-      :
-      type_float
       ;
   main
   body_block
@@ -35,68 +30,40 @@ program_no_funcs
         y
         =
         expression_simple
-          exp_simple
-            term_simple
-              factor_cte
-                float	3.14
-        ;
-    statement_assign
-      assign
-        z
-        =
-        expression_simple
           exp_compound
             term_simple
               factor_id	x
             +
-            term_simple
+            term_compound
+              factor_cte
+                int	2
+              *
               factor_id	x
-            -
-            term_simple
-              factor_id	x
-        ;
-    statement_print
-      print_single
-        print
-        (
-        print_expression
-          expression_simple
-            exp_simple
-              term_simple
-                factor_id	z
-        )
         ;
     }
   end
 
 IR:
-Program(id='simple_input', vars=Vars(declarations=(VarDeclaration(type_='int', names=['x']), VarDeclaration(type_='float', names=['y', 'z']))), funcs=[], body=Body(statements=(Assign(id='x', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=5, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)), Assign(id='y', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=3.14, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)), Assign(id='z', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='x', sign='+'), operations=[]), operations=[(Token('ADD', '+'), Term(left_factor=Factor(value='x', sign='+'), operations=[])), (Token('SUB', '-'), Term(left_factor=Factor(value='x', sign='+'), operations=[]))]), op=None, right_expr=None)), Print(contents=[Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='z', sign='+'), operations=[]), operations=[]), op=None, right_expr=None)]))))
+Program(id='simple_input', vars=Vars(declarations=(VarDeclaration(type_='int', names=['x', 'y']),)), funcs=[], body=Body(statements=(Assign(id='x', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=5, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)), Assign(id='y', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='x', sign='+'), operations=[]), operations=[(Token('ADD', '+'), Term(left_factor=Factor(value=2, sign='+'), operations=[(Token('MULT', '*'), Factor(value='x', sign='+'))]))]), op=None, right_expr=None)))))
 
 Symbol Table:
 Scope: global
   x: int = 5
-  y: float = 3.14
-  z: float = 5.0
+  y: int = 15
 
 
 Quads:
-8 1000 1000 x
-8 2000 2000 y
-8 2001 2001 z
 8 1000 1000 None
-8 2000 2000 None
-4 1000 1000 5000
-4 5000 5000 5001
-8 2001 2001 None
-9 2001 2001 None
+8 1001 1001 None
+8 1000 1000 None
+3 7001 7001 5000
+1 1000 1000 5001
+8 1001 1001 None
 --------
-Operations.ASSIGN 1000 1000 x
-Operations.ASSIGN 2000 2000 y
-Operations.ASSIGN 2001 2001 z
-Operations.ASSIGN 1000 1000 None
-Operations.ASSIGN 2000 2000 None
-Operations.DIV 1000 1000 5000
-Operations.DIV 5000 5000 5001
-Operations.ASSIGN 2001 2001 None
-Operations.PRINT 2001 2001 None
+Operations.ASSIGN x
+Operations.ASSIGN y
+Operations.ASSIGN x 5
+Operations.MULT 2 x ti0
+Operations.PLUS x ti0 ti1
+Operations.ASSIGN y ti1
 

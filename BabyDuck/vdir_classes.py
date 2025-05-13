@@ -45,6 +45,7 @@ class MemoryManager:
         self.constants_string: Dict[str, int] = dict()
         self.constants_int: Dict[int, int] = dict()
         self.constants_float: Dict[float, int] = dict()
+        self.constants: Dict[int, Union[int, float, str]] = dict()
 
     def _allocate_local(self, local_name: Optional[str], var_type: VariableType) -> int:
         if local_name is None:
@@ -83,6 +84,7 @@ class MemoryManager:
             else:
                 self.constants_float[value] = address
 
+        self.constants[address] = value
         self.address_ranges[VariableType.CONSTANT].current += 1
         return address
 

@@ -87,7 +87,7 @@ class BabyInterpreter:
                     VariableType.TEMP_INT if result_type == "int" else VariableType.TEMP_FLOAT,
                 )
                 quad = self.add_quad(
-                    op=(Operations.MULT if op == '*' else Operations.DIV), 
+                    op=(Operations.PLUS if op == '+' else Operations.MINUS), 
                     vdir1=left_exp.vdir, 
                     vdir2=right_exp.vdir,
                     storage_vdir=storage_vdir
@@ -206,7 +206,7 @@ class BabyInterpreter:
     def execute_var_declaration(self, ir): 
         for var_name in ir.names:
             vdir = self.symbol_table.add_variable(name=var_name, data_type=ir.type_, scope_name=self.current_scope)
-            self.add_quad(op=Operations.ASSIGN, vdir1=vdir, storage_vdir=var_name)
+            self.add_quad(op=Operations.ASSIGN, vdir1=vdir)
 
     def execute_function(self, ir): 
         self.current_scope = ir.id

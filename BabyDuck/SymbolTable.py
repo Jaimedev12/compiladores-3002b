@@ -53,7 +53,7 @@ class SymbolTable:
         """Get a variable from the specified directory."""
         for scope in self.scopes.values():
             for symbol in scope.symbols.values():
-                if symbol.category == "var" and symbol.value == v_dir:
+                if symbol.category == "var" and symbol.vdir == v_dir:
                     return symbol
                 
         raise ValueError(f"Variable with directory {v_dir} not found.")
