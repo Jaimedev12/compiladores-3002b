@@ -14,6 +14,7 @@ class Quad():
     vdir2: Optional[int] = None
     storage_vdir: Optional[int] = None
     label: Optional[str] = None
+    scope: str = "global"
 
 @dataclass
 class Expression():

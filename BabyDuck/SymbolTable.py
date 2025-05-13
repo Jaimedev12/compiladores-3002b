@@ -42,6 +42,7 @@ class SymbolTable:
     def __init__(self, memory_manager: MemoryManager):
         self.scopes: Dict[str, Scope] = {}
         self.add_scope(Scope(name="global", memory_manager=memory_manager, body=None))
+        self.memory_manager = memory_manager
         
     def get_scope(self, name: str) -> Scope:
         if name not in self.scopes:
@@ -76,9 +77,25 @@ class SymbolTable:
             raise ValueError(f"Function {function_name} only has {len(function_scope.params)} parameters.")
         
         return function_scope.params[param_index]
-            
+
+    def get_symbol(self, vdir: int, scope_name: str) -> Symbol:
+        """Get a symbol from the specified scope."""
+        local_scope = self.get_scope(scope_name)
+        global_scope = self.get_scope("global")
+        
+        param_vdirs = [param.vdir for param in local_scope.params]
+        for i, param_vdir in enumerate(param_vdirs):
+            if param_vdir == vdir:
+                return local_scope.params[i]
+        
+        if vdir in local_scope.symbols_v_dir:
+            return local_scope.symbols_v_dir[vdir]
+        elif vdir in global_scope.symbols:
+            return global_scope.symbols_v_dir[vdir]
+        else:
+            raise ValueError(f"Symbol {vdir} not found in {scope_name} or global scope.")  
     
-    def get_symbol(self, name: str, scope_name: str) -> Symbol:
+    def get_symbol_by_name(self, name: str, scope_name: str) -> Symbol:
         """Get a symbol from the specified scope."""
         local_scope = self.get_scope(scope_name)
         global_scope = self.get_scope("global")
@@ -162,14 +179,10 @@ class SymbolTable:
     
     def add_function(self, name: str, params: List[Param], body, vars: Optional[Vars]) -> None:
         """Add a function as a scope"""
-        self.add_scope(Scope(name, body))
+        self.add_scope(Scope(name, memory_manager=self.memory_manager, body=body))
         
         for i, param in enumerate(params):
             self.add_parameter(name=param.name, data_type=param.type_, scope_name=name, param_index=i)
-
-        for var_declaration in vars.declarations if vars else []:
-            for var_name in var_declaration.names:
-                self.add_variable(name=var_name, data_type=var_declaration.type_, scope_name=name)
 
     # def update_symbol_value(self, name: str, value: Any, scope_name: str) -> None:
     #     """Update the value of a symbol in the specified scope."""

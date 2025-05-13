@@ -1,0 +1,165 @@
+Parse Tree:
+program_all
+  program
+  linear_statements
+  ;
+  vars
+    var
+    var_declaration_single
+      x
+      :
+      type_int
+      ;
+    var_declaration_multiple
+      y
+      ,
+      z
+      :
+      type_float
+      ;
+  funcs_all
+    void
+    sum
+    (
+    params_multiple
+      a
+      :
+      type_int
+      ,
+      b
+      :
+      type_float
+    )
+    [
+    vars
+      var
+      var_declaration_single
+        c
+        :
+        type_int
+        ;
+    body_block
+      {
+      statement_assign
+        assign
+          c
+          =
+          expression_simple
+            exp_simple
+              term_simple
+                factor_cte
+                  int	4
+          ;
+      statement_print
+        print_multiple
+          print
+          (
+          print_string	"The sum is: "
+          ,
+          print_expression
+            expression_simple
+              exp_compound
+                term_simple
+                  factor_id	a
+                +
+                term_simple
+                  factor_id	b
+                +
+                term_simple
+                  factor_id	c
+          )
+          ;
+      statement_assign
+        assign
+          a
+          =
+          expression_simple
+            exp_simple
+              term_simple
+                factor_cte
+                  int	2
+          ;
+      statement_print
+        print_multiple
+          print
+          (
+          print_string	"The sum is: "
+          ,
+          print_expression
+            expression_simple
+              exp_compound
+                term_simple
+                  factor_id	a
+                +
+                term_simple
+                  factor_id	b
+                +
+                term_simple
+                  factor_id	c
+          )
+          ;
+      }
+    ]
+    ;
+  main
+  body_block
+    {
+    statement_assign
+      assign
+        x
+        =
+        expression_simple
+          exp_simple
+            term_simple
+              factor_cte
+                int	5
+        ;
+    statement_assign
+      assign
+        y
+        =
+        expression_simple
+          exp_simple
+            term_simple
+              factor_cte
+                float	3.14
+        ;
+    }
+  end
+
+IR:
+Program(id='linear_statements', vars=Vars(declarations=(VarDeclaration(type_='int', names=['x']), VarDeclaration(type_='float', names=['y', 'z']))), funcs=(Function(return_type=Token('VOID', 'void'), id='sum', params=[Param(name='a', type_='int'), Param(name='b', type_='float')], vars=Vars(declarations=(VarDeclaration(type_='int', names=['c']),)), body=Body(statements=(Assign(id='c', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=4, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)), Print(contents=['The sum is: ', Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='a', sign='+'), operations=[]), operations=[(<Operations.PLUS: 1>, Term(left_factor=Factor(value='b', sign='+'), operations=[])), (<Operations.PLUS: 1>, Term(left_factor=Factor(value='c', sign='+'), operations=[]))]), op=None, right_expr=None)]), Assign(id='a', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=2, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)), Print(contents=['The sum is: ', Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='a', sign='+'), operations=[]), operations=[(<Operations.PLUS: 1>, Term(left_factor=Factor(value='b', sign='+'), operations=[])), (<Operations.PLUS: 1>, Term(left_factor=Factor(value='c', sign='+'), operations=[]))]), op=None, right_expr=None)])))),), body=Body(statements=(Assign(id='x', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=5, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)), Assign(id='y', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=3.14, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)))))
+
+Symbol Table:
+Scope: global
+  x: int = None
+  y: float = None
+  z: float = None
+Scope: sum
+  a: int = None
+  b: float = None
+  c: int = None
+  Param: a: int = None
+  Param: b: float = None
+
+
+Quads:
+Operations.ASSIGN x
+Operations.ASSIGN y
+Operations.ASSIGN z
+Operations.ASSIGN c
+Operations.ASSIGN c 4
+Operations.PRINT The sum is: 
+Operations.PLUS a b tf0
+Operations.PLUS tf0 c tf1
+Operations.PRINT tf1
+Operations.ASSIGN a 2
+Operations.PRINT The sum is: 
+Operations.PLUS a b tf2
+Operations.PLUS tf2 c tf3
+Operations.PRINT tf3
+Operations.ASSIGN x 5
+Operations.ASSIGN y 3.14
+
+
+

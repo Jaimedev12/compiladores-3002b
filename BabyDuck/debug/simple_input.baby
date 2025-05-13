@@ -1,8 +1,0 @@
-program simple_input;
-var x, y: int;
-main {
-    x = 5;
-    y = x + 2 * x;
-}
-
-end

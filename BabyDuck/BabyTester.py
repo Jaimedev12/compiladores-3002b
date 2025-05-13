@@ -23,11 +23,11 @@ with open('grammar.lark', 'r') as file:
 babyParser = Lark(grammar, start='start', parser='lalr', debug=True)
 baby = babyParser.parse
 
-def get_symbol_name(symbol_table: SymbolTable, mem_mgr: MemoryManager, vdir: int) -> str:
+def get_symbol_name(symbol_table: SymbolTable, mem_mgr: MemoryManager, vdir: int, scope_name: str = "global") -> str:
     if vdir < mem_mgr.address_ranges[AllocCategory.GLOBAL_INT].start:
         raise ValueError("Invalid variable directory (vdir)")
     if vdir < mem_mgr.address_ranges[AllocCategory.TEMP_INT].start:
-        return symbol_table.get_variable(vdir).name
+        return symbol_table.get_symbol(vdir, scope_name=scope_name).name
     if vdir <= mem_mgr.address_ranges[AllocCategory.TEMP_INT].end:
         return "ti"+str(vdir-mem_mgr.address_ranges[AllocCategory.TEMP_INT].start)
     if vdir <= mem_mgr.address_ranges[AllocCategory.TEMP_FLOAT].end:
@@ -103,7 +103,7 @@ if __name__ == "__main__":
                     output_file.write("\n")
                     output_file.write("\nQuads:\n")
                     for quad in quads:
-                        output_file.write(f"{quad.op_vdir} {quad.vdir1} {quad.vdir1} {quad.storage_vdir}")
+                        output_file.write(f"{quad.op_vdir} {quad.vdir1} {quad.vdir2} {quad.storage_vdir}")
                         if quad.label:
                             output_file.write(f" -> {quad.label}")
                         output_file.write("\n")
@@ -111,13 +111,13 @@ if __name__ == "__main__":
                     for quad in quads:
                         output_file.write(f"{Operations(quad.op_vdir)}")
                         if quad.vdir1:
-                            output_file.write(f" {get_symbol_name(symbol_table, memory_manager, quad.vdir1)}")
+                            output_file.write(f" {get_symbol_name(symbol_table, memory_manager, vdir=quad.vdir1, scope_name=quad.scope)}")
                         
                         if quad.vdir2:
-                            output_file.write(f" {get_symbol_name(symbol_table, memory_manager, vdir=quad.vdir2)}")
+                            output_file.write(f" {get_symbol_name(symbol_table, memory_manager, vdir=quad.vdir2, scope_name=quad.scope)}")
 
                         if quad.storage_vdir:
-                            output_file.write(f" {get_symbol_name(symbol_table, memory_manager, vdir=quad.storage_vdir)}")
+                            output_file.write(f" {get_symbol_name(symbol_table, memory_manager, vdir=quad.storage_vdir, scope_name=quad.scope)}")
                         
                         if quad.label:
                             output_file.write(f" -> {quad.label}")

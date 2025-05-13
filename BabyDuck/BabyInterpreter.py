@@ -25,7 +25,7 @@ class BabyInterpreter:
             ) -> Quad:
         """Add a quadruple to the list of quads."""
 
-        quad = Quad(op_vdir=op.value, vdir1=vdir1, vdir2=vdir2, storage_vdir=storage_vdir)
+        quad = Quad(op_vdir=op.value, vdir1=vdir1, vdir2=vdir2, storage_vdir=storage_vdir, scope=self.current_scope)
         self.quads.append(quad)
         return quad
 
@@ -99,16 +99,17 @@ class BabyInterpreter:
                 if not self.symbol_table.is_symbol_declared(current_tree_node.value, self.current_scope):
                     raise ValueError(f"Variable {current_tree_node.value} is not declared.")
                 
-                symbol = self.symbol_table.get_symbol(current_tree_node.value, self.current_scope)
+                symbol = self.symbol_table.get_symbol_by_name(current_tree_node.value, self.current_scope)
                 return symbol.vdir # Stored in the symbol table                    
                 
             elif isinstance(current_tree_node.value, (int, float)):
                 if current_tree_node.sign == '-':
-                    vdir = self.memory_manager.allocate(AllocCategory.CONSTANT, const_value=current_tree_node.value * -1)
-                    return vdir
+                    value = current_tree_node.value * -1
                 else:
-                    vdir = self.memory_manager.allocate(AllocCategory.CONSTANT, const_value=current_tree_node.value)
-                    return vdir
+                    value = current_tree_node.value
+                    
+                vdir = self.memory_manager.allocate(AllocCategory.CONSTANT, const_value=value)
+                return vdir
                 
             elif isinstance(current_tree_node.value, Expression):
                 return self.evaluate_expression(current_tree_node.value)
@@ -151,7 +152,6 @@ class BabyInterpreter:
         elif isinstance(ir, FCall):
             self.gen_quads_f_call(ir)
 
-
     
     def gen_quads_program(self, ir: Program):
         if ir.vars is not None: 
@@ -172,6 +172,8 @@ class BabyInterpreter:
     def gen_quads_function(self, ir: Function): 
         self.current_scope = ir.id
         self.symbol_table.add_function(name=ir.id, params=ir.params, body=ir.body, vars=ir.vars)
+        if ir.vars is not None: 
+            self.gen_quads_vars(ir.vars)
         self.gen_quads_body(ir.body)
         self.current_scope = "global"
 
@@ -181,7 +183,7 @@ class BabyInterpreter:
 
         if not self.symbol_table.is_symbol_declared(ir.id, self.current_scope):
             raise ValueError(f"Variable {ir.id} is not declared.")
-        symbol = self.symbol_table.get_symbol(ir.id, self.current_scope)
+        symbol = self.symbol_table.get_symbol_by_name(ir.id, self.current_scope)
         
         var_type = self.symbol_table.get_variable_type(ir.id, self.current_scope)
         is_valid_decl = self.semantic_cube.is_decl_valid(from_type=expr_type, to_type=var_type)
@@ -193,7 +195,7 @@ class BabyInterpreter:
     def gen_quads_print(self, ir: Print): 
         for content in ir.contents:
             if isinstance(content, str):
-                allocated_const = self.memory_manager.allocate(AllocCategory.CONSTANT)
+                allocated_const = self.memory_manager.allocate(AllocCategory.CONSTANT, const_value=content)
                 self.add_quad(op=Operations.PRINT, vdir1=allocated_const)
             else:
                 # Evaluate the expression and print its value
