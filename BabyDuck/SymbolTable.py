@@ -7,35 +7,32 @@ from MemoryManager import MemoryManager, AllocCategory
 class Symbol:
     name: str
     data_type: VariableType
-    vdir: int
+    vdir: int = 0
     value: Optional[Union[int, float]] = None
-    category: str = "var"
+    # category: str = "var"
+    is_param: bool = False
     param_index: Optional[int] = None
 
 class Scope:
     def __init__(self, name: str, memory_manager: MemoryManager, body=None):
         self.name = name
         self.symbols: Dict[str, Symbol] = {}
-        self.symbols_v_dir: Dict[int, Symbol]= {}
-        self.params: List[Symbol] = []
+        self.symbols_by_vdir: Dict[int, Symbol]= {}
+        self.param_list: List[Symbol] = []
         self.body: Optional[Body]= body
         self.memory_manager = memory_manager
         self.current_local_vdir = 0
-    
+
     def add_symbol(self, symbol: Symbol) -> None:
-        """Add a symbol to the scope."""
+        """Add any symbol to the scope."""
         if symbol.name in self.symbols:
             raise ValueError(f"Symbol {symbol.name} already exists in {self.name}.")
-        self.symbols[symbol.name] = symbol
-        self.symbols_v_dir[symbol.vdir] = symbol
         
-    def add_param(self, symbol: Symbol) -> None:
-        """Add a parameter to the scope."""
-        if symbol.name in self.params:
-            raise ValueError(f"Parameter {symbol.name} already exists in {self.name}.")
-        self.params.append(symbol)
         self.symbols[symbol.name] = symbol
-        self.symbols_v_dir[symbol.vdir] = symbol
+        self.symbols_by_vdir[symbol.vdir] = symbol
+        
+        if symbol.is_param:
+            self.param_list.append(symbol)
 
 
 class SymbolTable:
@@ -43,82 +40,55 @@ class SymbolTable:
         self.scopes: Dict[str, Scope] = {}
         self.add_scope(Scope(name="global", memory_manager=memory_manager, body=None))
         self.memory_manager = memory_manager
-        
-    def get_scope(self, name: str) -> Scope:
+
+    def _allocate_vdir(self, data_type: str, scope_name: str) -> int:
+        """Internal helper to allocate virtual directories consistently"""
+        if scope_name == "global":
+            category = AllocCategory.GLOBAL_INT if data_type == "int" else AllocCategory.GLOBAL_FLOAT
+        else:
+            category = AllocCategory.LOCAL_INT if data_type == "int" else AllocCategory.LOCAL_FLOAT
+            
+        if data_type not in ["int", "float"]:
+            raise ValueError(f"Invalid data type {data_type}")
+            
+        return self.memory_manager.allocate(var_type=category, local_name=scope_name)
+
+    def _get_scope(self, name: str) -> Scope:
         if name not in self.scopes:
             raise ValueError(f"Scope {name} not found.")
-        return self.scopes[name]
+        return self.scopes[name]    
     
-    def get_variable(self, v_dir: int) -> Symbol:
-        """Get a variable from the specified directory."""
-        for scope in self.scopes.values():
-            for symbol in scope.symbols.values():
-                if symbol.category == "var" and symbol.vdir == v_dir:
-                    return symbol
-                
-        raise ValueError(f"Variable with directory {v_dir} not found.")
+    def get_symbol(self, identifier: Union[str, int], scope_name: str = "global") -> Symbol:
+        """Unified symbol lookup in local and global scopes
+        
+        Args:
+            identifier: Either name (str) or vdir (int)
+            scope_name: Current scope to check first
+        """
+        local_scope = self._get_scope(scope_name)
+        global_scope = self._get_scope("global")
+        
+        # Check parameters first
+        # for i, param in enumerate(local_scope.param_list):
+        #     if (by_name and param.name == identifier) or (not by_name and param.vdir == identifier):
+        #         return param
+        
+        by_name = isinstance(identifier, str)
+        # Check local and global scopes
+        if by_name:
+            # By name lookup
+            if identifier in local_scope.symbols:
+                return local_scope.symbols[identifier]
+            elif identifier in global_scope.symbols:
+                return global_scope.symbols[identifier]
+        else:
+            # By vdir lookup
+            if identifier in local_scope.symbols_by_vdir:
+                return local_scope.symbols_by_vdir[identifier]
+            elif identifier in global_scope.symbols_by_vdir:
+                return global_scope.symbols_by_vdir[identifier]
 
-    def get_variable_by_name(self, name: str, scope_name: str) -> Optional[Symbol]:
-        """Get a symbol from the specified scope."""
-        local_scope = self.get_scope(scope_name)
-        global_scope = self.get_scope("global")
-        if name in local_scope.symbols:
-            return local_scope.symbols[name]
-        elif name in global_scope.symbols:
-            return global_scope.symbols[name]
-        else:
-            raise ValueError(f"Symbol {name} not found in {scope_name} or global scope.")
-    
-    def get_parameter(self, param_index: int, function_name: str):
-        """Get a parameter from the specified function scope."""
-        function_scope = self.get_scope(function_name)
-        
-        if len(function_scope.params) <= param_index:
-            raise ValueError(f"Function {function_name} only has {len(function_scope.params)} parameters.")
-        
-        return function_scope.params[param_index]
-
-    def get_symbol(self, vdir: int, scope_name: str) -> Symbol:
-        """Get a symbol from the specified scope."""
-        local_scope = self.get_scope(scope_name)
-        global_scope = self.get_scope("global")
-        
-        param_vdirs = [param.vdir for param in local_scope.params]
-        for i, param_vdir in enumerate(param_vdirs):
-            if param_vdir == vdir:
-                return local_scope.params[i]
-        
-        if vdir in local_scope.symbols_v_dir:
-            return local_scope.symbols_v_dir[vdir]
-        elif vdir in global_scope.symbols:
-            return global_scope.symbols_v_dir[vdir]
-        else:
-            raise ValueError(f"Symbol {vdir} not found in {scope_name} or global scope.")  
-    
-    def get_symbol_by_name(self, name: str, scope_name: str) -> Symbol:
-        """Get a symbol from the specified scope."""
-        local_scope = self.get_scope(scope_name)
-        global_scope = self.get_scope("global")
-        
-        param_names = [param.name for param in local_scope.params]
-        for i, param_name in enumerate(param_names):
-            if param_name == name:
-                return local_scope.params[i]
-        
-        if name in local_scope.symbols:
-            return local_scope.symbols[name]
-        elif name in global_scope.symbols:
-            return global_scope.symbols[name]
-        else:
-            raise ValueError(f"Symbol {name} not found in {scope_name} or global scope.")
-    
-    def get_variable_type(self, name: str, scope_name: str) -> VariableType:
-        """Get the type of a variable in the specified scope."""
-        var = self.get_variable_by_name(name, scope_name)
-        if var is None:
-            raise ValueError(f"Variable {name} not found in {scope_name}.")
-        
-        return var.data_type
+        raise ValueError(f"Symbol {identifier} not found in {scope_name} or global scope.")
 
     def add_scope(self, scope: Scope) -> None:
         if scope.name in self.scopes:
@@ -126,100 +96,48 @@ class SymbolTable:
         self.scopes[scope.name] = scope
         
     def add_symbol(self, symbol: Symbol, scope_name: str) -> None:
-        scope = self.get_scope(scope_name)
+        scope = self._get_scope(scope_name)
+        if symbol.vdir == 0:
+            symbol.vdir = self._allocate_vdir(symbol.data_type, scope_name)
         scope.add_symbol(symbol)
-        
-    def add_variable(self, name: str, data_type: str, value: Any = None, scope_name: str = "global") -> int:
-        """Add a variable to the specified scope."""
-        vdir = 0
-        if scope_name == "global":
-            if data_type == "int":
-                vdir = self.scopes[scope_name].memory_manager.allocate(var_type=AllocCategory.GLOBAL_INT)
-            elif data_type == "float":
-                vdir = self.scopes[scope_name].memory_manager.allocate(var_type=AllocCategory.GLOBAL_FLOAT)
-            else:
-                raise ValueError(f"Invalid data type {data_type} for global variable.")
 
-        else:
-            if data_type == "int":
-                vdir = self.scopes[scope_name].memory_manager.allocate(var_type=AllocCategory.LOCAL_INT, local_name=scope_name)
-            elif data_type == "float":
-                vdir = self.scopes[scope_name].memory_manager.allocate(var_type=AllocCategory.LOCAL_FLOAT, local_name=scope_name)
-            else:
-                raise ValueError(f"Invalid data type {data_type} for local variable.")
+    def add_symbol_by_attrs(
+            self, 
+            name: str, 
+            data_type: VariableType, 
+            value: Any = None, 
+            scope_name: str = "global", 
+            is_param: bool = False, 
+            param_index: Optional[int] = None
+        ) -> int:
+        """Add a symbol to the specified scope."""
+        vdir = self._allocate_vdir(data_type, scope_name)
 
-        variable = Symbol(name=name, data_type=data_type, value=value, category="var", vdir=vdir)
-        self.add_symbol(variable, scope_name=scope_name)
-        return variable.vdir
+        symbol = Symbol(name=name, data_type=data_type, value=value, vdir=vdir, is_param=is_param, param_index=param_index)
+        self.add_symbol(symbol, scope_name=scope_name)
+        return symbol.vdir
     
-    def add_parameter(self, name: str, data_type: str, scope_name: str, param_index: int) -> int:
-        """Add a parameter to the specified scope."""
-
-        vdir = 0
-        if scope_name == "global":
-            if data_type == "int":
-                vdir = self.scopes[scope_name].memory_manager.allocate(var_type=AllocCategory.GLOBAL_INT)
-            elif data_type == "float":
-                vdir = self.scopes[scope_name].memory_manager.allocate(var_type=AllocCategory.GLOBAL_FLOAT)
-            else:
-                raise ValueError(f"Invalid data type {data_type} for global variable.")
-
-        else:
-            if data_type == "int":
-                vdir = self.scopes[scope_name].memory_manager.allocate(var_type=AllocCategory.LOCAL_INT, local_name=scope_name)
-            elif data_type == "float":
-                vdir = self.scopes[scope_name].memory_manager.allocate(var_type=AllocCategory.LOCAL_FLOAT, local_name=scope_name)
-            else:
-                raise ValueError(f"Invalid data type {data_type} for local variable.")
-
-        param_as_symbol = Symbol(name=name, data_type=data_type, category="param", param_index=param_index, vdir=vdir)
-        scope = self.get_scope(scope_name)
-        scope.add_param(param_as_symbol)
-        return param_as_symbol.vdir
-    
-    def add_function(self, name: str, params: List[Param], body, vars: Optional[Vars]) -> None:
+    def add_function(self, name: str, params: List[Param], body) -> None:
         """Add a function as a scope"""
         self.add_scope(Scope(name, memory_manager=self.memory_manager, body=body))
         
         for i, param in enumerate(params):
-            self.add_parameter(name=param.name, data_type=param.type_, scope_name=name, param_index=i)
-
-    # def update_symbol_value(self, name: str, value: Any, scope_name: str) -> None:
-    #     """Update the value of a symbol in the specified scope."""
-    #     local_scope = self.get_scope(scope_name)
-    #     global_scope = self.get_scope("global")
-        
-    #     param_names = [param.name for param in local_scope.params]
-    #     for i, param_name in enumerate(param_names):
-    #         if param_name == name:
-    #             local_scope.params[i].value = value
-    #             return
-        
-    #     if name in local_scope.symbols:
-    #         local_scope.symbols[name].value = value
-            
-    #     elif name in global_scope.symbols:
-    #         global_scope.symbols[name].value = value
-            
-    #     else:
-    #         raise ValueError(f"Symbol {name} not found in {scope_name} or global scope.")
-
-    # def update_parameter_value(self, param_index: int, value: Any, function_name: str) -> None:
-    #     function_scope = self.get_scope(function_name)
-        
-    #     if len(function_scope.params) <= param_index:
-    #         raise ValueError(f"Function {function_name} only has {len(function_scope.params)} parameters.")
-        
-    #     function_scope.params[param_index].value = value
+            self.add_symbol_by_attrs(
+                name=param.name,
+                data_type=param.type_,
+                scope_name=name,
+                is_param=True,
+                param_index=i
+            )
 
     def is_symbol_declared(self, name: str, scope_name: str) -> bool:
-        local_scope = self.get_scope(scope_name)
-        global_scope = self.get_scope("global")
+        local_scope = self._get_scope(scope_name)
+        global_scope = self._get_scope("global")
         
-        for local_param in local_scope.params:
+        for local_param in local_scope.param_list:
             if local_param.name == name:
                 return True
-        for global_param in global_scope.params:
+        for global_param in global_scope.param_list:
             if global_param.name == name:
                 return True
 
@@ -229,11 +147,6 @@ class SymbolTable:
     
     def is_function_declared(self, name: str) -> bool:
         return name in self.scopes and self.scopes[name].body is not None
-    
-    # def clean_params(self, function_name: str) -> None:
-    #     function_scope = self.get_scope(function_name)
-    #     for param in function_scope.params:
-    #         param.value = None
 
     def to_string(self) -> str:
         """Return a string representation of the symbol table."""
@@ -242,7 +155,7 @@ class SymbolTable:
             result += f"Scope: {scope_name}\n"
             for symbol in scope.symbols.values():
                 result += f"  {symbol.name}: {symbol.data_type} = {symbol.value}\n"
-            for param in scope.params:
+            for param in scope.param_list:
                 result += f"  Param: {param.name}: {param.data_type} = {param.value}\n"
         return result
     

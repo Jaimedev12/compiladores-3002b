@@ -85,16 +85,16 @@ class BabyTransformer(Transformer):
             | (VOID | type_) ID OPEN_PAREN params CLOSE_PAREN OPEN_BRACKET vars body CLOSE_BRACKET SEMICOLON -> funcs_all
     """
     def funcs_no_params_no_vars(self, *args):
-        return Function(return_type=args[0], id=args[1], params=[], vars=None, body=args[-3])
+        return Function(id=args[1], params=[], vars=None, body=args[-3])
     
     def funcs_no_params(self, *args):
-        return Function(return_type=args[0], id=args[1], params=[], vars=args[-4], body=args[-3])
+        return Function(id=args[1], params=[], vars=args[-4], body=args[-3])
     
     def funcs_no_vars(self, *args):
-        return Function(return_type=args[0], id=args[1], params=args[3], vars=None, body=args[6])
+        return Function(id=args[1], params=args[3], vars=None, body=args[6])
     
     def funcs_all(self, *args):
-        return Function(return_type=args[0], id=args[1], params=args[3], vars=args[6], body=args[7])
+        return Function(id=args[1], params=args[3], vars=args[6], body=args[7])
 
 
     """

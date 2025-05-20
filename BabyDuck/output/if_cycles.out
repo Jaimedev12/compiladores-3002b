@@ -1,0 +1,179 @@
+Parse Tree:
+program_all
+  program
+  if_cycles
+  ;
+  vars
+    var
+    var_declaration_single
+      x
+      :
+      type_int
+      ;
+  funcs_all
+    void
+    test
+    (
+    params_single
+      a
+      :
+      type_int
+    )
+    [
+    vars
+      var
+      var_declaration_single
+        c
+        :
+        type_int
+        ;
+    body_block
+      {
+      statement_condition
+        condition_else
+          if
+          (
+          expression_compound
+            exp_simple
+              term_simple
+                factor_id	a
+            comparison_op	>
+            exp_simple
+              term_simple
+                factor_cte
+                  int	2
+          )
+          body_block
+            {
+            statement_assign
+              assign
+                c
+                =
+                expression_simple
+                  exp_compound
+                    term_simple
+                      factor_id	a
+                    +
+                    term_simple
+                      factor_cte
+                        int	2
+                ;
+            }
+          else
+          body_block
+            {
+            statement_assign
+              assign
+                c
+                =
+                expression_simple
+                  exp_compound
+                    term_simple
+                      factor_id	a
+                    -
+                    term_simple
+                      factor_cte
+                        int	2
+                ;
+            }
+          ;
+      }
+    ]
+    ;
+  main
+  body_block
+    {
+    statement_assign
+      assign
+        x
+        =
+        expression_simple
+          exp_simple
+            term_simple
+              factor_cte
+                int	2
+        ;
+    statement_condition
+      condition_if
+        if
+        (
+        expression_compound
+          exp_simple
+            term_simple
+              factor_id	x
+          comparison_op	<
+          exp_simple
+            term_simple
+              factor_cte
+                int	5
+        )
+        body_block
+          {
+          statement_assign
+            assign
+              x
+              =
+              expression_simple
+                exp_simple
+                  term_simple
+                    factor_cte
+                      int	5
+              ;
+          }
+        ;
+    statement_cycle
+      cycle
+        while
+        (
+        expression_compound
+          exp_simple
+            term_simple
+              factor_id	x
+          comparison_op	>
+          exp_simple
+            term_simple
+              factor_cte
+                int	0
+        )
+        do
+        body_block
+          {
+          statement_assign
+            assign
+              x
+              =
+              expression_simple
+                exp_compound
+                  term_simple
+                    factor_id	x
+                  -
+                  term_simple
+                    factor_cte
+                      int	1
+              ;
+          }
+        ;
+    }
+  end
+
+IR:
+Program(id='if_cycles', vars=Vars(declarations=(VarDeclaration(type_='int', names=['x']),)), funcs=(Function(id='test', params=[Param(name='a', type_='int')], vars=Vars(declarations=(VarDeclaration(type_='int', names=['c']),)), body=Body(statements=(Condition(expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='a', sign='+'), operations=[]), operations=[]), op='>', right_expr=Exp(left_term=Term(left_factor=Factor(value=2, sign='+'), operations=[]), operations=[])), if_body=Body(statements=(Assign(id='c', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='a', sign='+'), operations=[]), operations=[(<Operations.PLUS: 1>, Term(left_factor=Factor(value=2, sign='+'), operations=[]))]), op=None, right_expr=None)),)), else_body=Body(statements=(Assign(id='c', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='a', sign='+'), operations=[]), operations=[(<Operations.MINUS: 2>, Term(left_factor=Factor(value=2, sign='+'), operations=[]))]), op=None, right_expr=None)),))),))),), body=Body(statements=(Assign(id='x', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=2, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)), Condition(expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='x', sign='+'), operations=[]), operations=[]), op='<', right_expr=Exp(left_term=Term(left_factor=Factor(value=5, sign='+'), operations=[]), operations=[])), if_body=Body(statements=(Assign(id='x', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=5, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)),)), else_body=None), Cycle(expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='x', sign='+'), operations=[]), operations=[]), op='>', right_expr=Exp(left_term=Term(left_factor=Factor(value=0, sign='+'), operations=[]), operations=[])), body=Body(statements=(Assign(id='x', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='x', sign='+'), operations=[]), operations=[(<Operations.MINUS: 2>, Term(left_factor=Factor(value=1, sign='+'), operations=[]))]), op=None, right_expr=None)),))))))
+
+Symbol Table:
+Scope: global
+  x: int = None
+Scope: test
+  a: int = None
+  c: int = None
+  Param: a: int = None
+
+
+Quads:
+8 1000 None None
+8 3001 None None
+8 1000 7000 None
+--------
+Operations.ASSIGN x
+Operations.ASSIGN c
+Operations.ASSIGN x 2
+

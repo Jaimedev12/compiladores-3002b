@@ -99,9 +99,12 @@ class BabyInterpreter:
                 if not self.symbol_table.is_symbol_declared(current_tree_node.value, self.current_scope):
                     raise ValueError(f"Variable {current_tree_node.value} is not declared.")
                 
-                symbol = self.symbol_table.get_symbol_by_name(current_tree_node.value, self.current_scope)
+                symbol = self.symbol_table.get_symbol(
+                    current_tree_node.value, 
+                    self.current_scope,
+                )
                 return symbol.vdir # Stored in the symbol table                    
-                
+
             elif isinstance(current_tree_node.value, (int, float)):
                 if current_tree_node.sign == '-':
                     value = current_tree_node.value * -1
@@ -166,12 +169,17 @@ class BabyInterpreter:
 
     def gen_quads_var_declaration(self, ir: VarDeclaration): 
         for var_name in ir.names:
-            vdir = self.symbol_table.add_variable(name=var_name, data_type=ir.type_, scope_name=self.current_scope)
+            vdir = self.symbol_table.add_symbol_by_attrs(
+                name=var_name,
+                data_type=ir.type_,
+                scope_name=self.current_scope,
+                value=None
+            )
             self.add_quad(op=Operations.ASSIGN, vdir1=vdir)
 
     def gen_quads_function(self, ir: Function): 
         self.current_scope = ir.id
-        self.symbol_table.add_function(name=ir.id, params=ir.params, body=ir.body, vars=ir.vars)
+        self.symbol_table.add_function(name=ir.id, params=ir.params, body=ir.body)
         if ir.vars is not None: 
             self.gen_quads_vars(ir.vars)
         self.gen_quads_body(ir.body)
@@ -183,9 +191,9 @@ class BabyInterpreter:
 
         if not self.symbol_table.is_symbol_declared(ir.id, self.current_scope):
             raise ValueError(f"Variable {ir.id} is not declared.")
-        symbol = self.symbol_table.get_symbol_by_name(ir.id, self.current_scope)
         
-        var_type = self.symbol_table.get_variable_type(ir.id, self.current_scope)
+        symbol = self.symbol_table.get_symbol(ir.id, self.current_scope)
+        var_type = symbol.data_type
         is_valid_decl = self.semantic_cube.is_decl_valid(from_type=expr_type, to_type=var_type)
         if not is_valid_decl:
             raise ValueError(f"Invalid assignment: {expr_type} cannot be assigned to {var_type}.")

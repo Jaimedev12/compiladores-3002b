@@ -29,15 +29,24 @@ class AddressRange:
     current: int
 
 class MemoryManager:
-    def __init__(self):
+    def __init__(self,
+                global_int_start: int = 1000,
+                global_float_start: int = 2000,
+                local_int_start: int = 3000,
+                local_float_start: int = 4000,
+                temp_int_start: int = 5000,
+                temp_float_start: int = 6000,
+                constant_start: int = 7000,
+                range_size: int = 1000
+            ):
         self.address_ranges = {
-            AllocCategory.GLOBAL_INT: AddressRange(1000, 1999, 1000),
-            AllocCategory.GLOBAL_FLOAT: AddressRange(2000, 2999, current=2000),
-            AllocCategory.LOCAL_INT: AddressRange(3000, 3999, current=3000),
-            AllocCategory.LOCAL_FLOAT: AddressRange(4000, 4999, current=4000),
-            AllocCategory.TEMP_INT: AddressRange(5000, 5999, 5000),
-            AllocCategory.TEMP_FLOAT: AddressRange(6000, 6999, 6000),
-            AllocCategory.CONSTANT: AddressRange(7000, 7999, 7000),
+            AllocCategory.GLOBAL_INT: AddressRange(global_int_start, global_int_start + range_size - 1, current=global_int_start),
+            AllocCategory.GLOBAL_FLOAT: AddressRange(global_float_start, global_float_start + range_size - 1, current=global_float_start),
+            AllocCategory.LOCAL_INT: AddressRange(local_int_start, local_int_start + range_size - 1, current=local_int_start),
+            AllocCategory.LOCAL_FLOAT: AddressRange(local_float_start, local_float_start + range_size - 1, current=local_float_start),
+            AllocCategory.TEMP_INT: AddressRange(temp_int_start, temp_int_start + range_size - 1, current=temp_int_start),
+            AllocCategory.TEMP_FLOAT: AddressRange(temp_float_start, temp_float_start + range_size - 1, current=temp_float_start),
+            AllocCategory.CONSTANT: AddressRange(constant_start, constant_start + range_size - 1, current=constant_start),
         }
 
         self.current_per_local: Dict[str, int] = dict()
@@ -46,8 +55,6 @@ class MemoryManager:
         self.constants_int: Dict[int, int] = dict()
         self.constants_float: Dict[float, int] = dict()
         self.constants: Dict[int, Union[int, float, str]] = dict()
-
-
 
     def _allocate_local(self, local_name: Optional[str], var_type: AllocCategory) -> int:
         if local_name is None:

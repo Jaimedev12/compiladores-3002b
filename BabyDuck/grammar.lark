@@ -17,10 +17,10 @@ vars: VAR (var_declaration)+
 ?var_declaration: ID COLON type_ SEMICOLON -> var_declaration_single
         | ID (COMMA ID)+ COLON type_ SEMICOLON -> var_declaration_multiple
 
-?funcs: (VOID | type_) ID OPEN_PAREN CLOSE_PAREN OPEN_BRACKET body CLOSE_BRACKET SEMICOLON -> funcs_no_params_no_vars
-        | (VOID | type_) ID OPEN_PAREN CLOSE_PAREN OPEN_BRACKET vars body CLOSE_BRACKET SEMICOLON -> funcs_no_params
-        | (VOID | type_) ID OPEN_PAREN params CLOSE_PAREN OPEN_BRACKET body CLOSE_BRACKET SEMICOLON -> funcs_no_vars
-        | (VOID | type_) ID OPEN_PAREN params CLOSE_PAREN OPEN_BRACKET vars body CLOSE_BRACKET SEMICOLON -> funcs_all
+?funcs: VOID ID OPEN_PAREN CLOSE_PAREN OPEN_BRACKET body CLOSE_BRACKET SEMICOLON -> funcs_no_params_no_vars
+        | VOID ID OPEN_PAREN CLOSE_PAREN OPEN_BRACKET vars body CLOSE_BRACKET SEMICOLON -> funcs_no_params
+        | VOID ID OPEN_PAREN params CLOSE_PAREN OPEN_BRACKET body CLOSE_BRACKET SEMICOLON -> funcs_no_vars
+        | VOID ID OPEN_PAREN params CLOSE_PAREN OPEN_BRACKET vars body CLOSE_BRACKET SEMICOLON -> funcs_all
 ?params: ID COLON type_ -> params_single
         | ID COLON type_ (COMMA ID COLON type_)+ -> params_multiple
 

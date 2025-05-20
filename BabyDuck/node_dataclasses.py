@@ -61,13 +61,12 @@ class Vars():
 
 @dataclass
 class VarDeclaration():
-    type_: str
+    type_: VariableType
     names: List[str]
 
 # Functions
 @dataclass
 class Function():
-    return_type: str
     id: str
     params: List['Param']
     vars: Optional['Vars']
@@ -76,7 +75,7 @@ class Function():
 @dataclass
 class Param():
     name: str
-    type_: str
+    type_: VariableType
 
 # Statements
 @dataclass
