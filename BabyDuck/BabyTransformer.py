@@ -193,6 +193,10 @@ class BabyTransformer(Transformer):
         return Expression(left_expr=exp)
     
     def expression_compound(self, exp1, op, exp2):
+        if op == '<':
+            op = Operations.LESS_THAN
+        elif op == '>':
+            op = Operations.GREATER_THAN
         return Expression(left_expr=exp1, op=op, right_expr=exp2)
 
     """

@@ -1,7 +1,4 @@
-from ast import Pass
-from dataclasses import dataclass
-from turtle import left
-from typing import cast, List, Union, Tuple, Optional
+from typing import List, Optional
 from SemanticCube import SemanticCube
 from node_dataclasses import *
 from SymbolTable import SymbolTable
@@ -19,7 +16,7 @@ class BabyInterpreter:
     def add_quad(
             self, 
             op: Operations, 
-            vdir1: int, 
+            vdir1: Optional[int] = None, 
             vdir2: Optional[int] = None, 
             storage_vdir: Optional[int] = None,
             ) -> Quad:
@@ -162,6 +159,7 @@ class BabyInterpreter:
         for func in ir.funcs:
             self.gen_quads_function(func)
         self.gen_quads_body(ir.body)
+        self.add_quad(op=Operations.END)
 
     def gen_quads_vars(self, ir: Vars): 
         for var_decl in ir.declarations:
@@ -175,7 +173,7 @@ class BabyInterpreter:
                 scope_name=self.current_scope,
                 value=None
             )
-            self.add_quad(op=Operations.ASSIGN, vdir1=vdir)
+            # self.add_quad(op=Operations.ASSIGN, vdir1=vdir)
 
     def gen_quads_function(self, ir: Function): 
         self.current_scope = ir.id
@@ -212,7 +210,25 @@ class BabyInterpreter:
         print()  # New line after printing all contents
 
     def gen_quads_condition(self, ir: Condition): 
-        pass
+        expr_vdir = self.evaluate_expression(ir.expr)
+        expr_type = self.memory_manager.get_address_type(expr_vdir)
+        if expr_type != "int":
+            raise ValueError(f"Condition expression must be of type int, got {expr_type}.")
+        
+        self.add_quad(op=Operations.GOTOF, vdir1=expr_vdir)
+        open_if_pos = len(self.quads) - 1
+        
+        self.gen_quads_body(ir.if_body)
+        
+        if ir.else_body is not None:
+            self.add_quad(op=Operations.GOTO, vdir1=-1)
+            goto_quad_pos = len(self.quads) - 1
+
+            self.quads[open_if_pos].vdir2 = len(self.quads)
+            self.gen_quads_body(ir.else_body)
+            self.quads[goto_quad_pos].vdir1 = len(self.quads)
+        else:
+            self.quads[open_if_pos].vdir2 = len(self.quads)
 
     def gen_quads_cycle(self, ir: Cycle): 
         pass

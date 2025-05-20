@@ -10,7 +10,7 @@ VariableType = Literal["int", "float"]
 @dataclass
 class Quad():
     op_vdir: int
-    vdir1: Optional[int]
+    vdir1: Optional[int] = None
     vdir2: Optional[int] = None
     storage_vdir: Optional[int] = None
     label: Optional[str] = None

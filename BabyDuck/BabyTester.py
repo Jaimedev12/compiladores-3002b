@@ -102,19 +102,24 @@ if __name__ == "__main__":
                     output_file.write(symbol_table_string)
                     output_file.write("\n")
                     output_file.write("\nQuads:\n")
-                    for quad in quads:
-                        output_file.write(f"{quad.op_vdir} {quad.vdir1} {quad.vdir2} {quad.storage_vdir}")
+                    for i, quad in enumerate(quads):
+                        output_file.write(f"<{i}> {quad.op_vdir} {quad.vdir1} {quad.vdir2} {quad.storage_vdir}")
                         if quad.label:
                             output_file.write(f" -> {quad.label}")
                         output_file.write("\n")
                     output_file.write("--------\n")
-                    for quad in quads:
-                        output_file.write(f"{Operations(quad.op_vdir)}")
+                    for i, quad in enumerate(quads):
+                        output_file.write(f"<{i}> {Operations(quad.op_vdir)}")
                         if quad.vdir1:
-                            output_file.write(f" {get_symbol_name(symbol_table, memory_manager, vdir=quad.vdir1, scope_name=quad.scope)}")
-                        
+                            if quad.op_vdir == Operations.GOTO.value:
+                                output_file.write(f" {quad.vdir1}")
+                            else:
+                                output_file.write(f" {get_symbol_name(symbol_table, memory_manager, vdir=quad.vdir1, scope_name=quad.scope)}")
                         if quad.vdir2:
-                            output_file.write(f" {get_symbol_name(symbol_table, memory_manager, vdir=quad.vdir2, scope_name=quad.scope)}")
+                            if quad.op_vdir == Operations.GOTOF.value:
+                                output_file.write(f" {quad.vdir2}")
+                            else:
+                                output_file.write(f" {get_symbol_name(symbol_table, memory_manager, vdir=quad.vdir2, scope_name=quad.scope)}")
 
                         if quad.storage_vdir:
                             output_file.write(f" {get_symbol_name(symbol_table, memory_manager, vdir=quad.storage_vdir, scope_name=quad.scope)}")

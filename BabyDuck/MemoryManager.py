@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
+from tkinter import END
 from typing import Dict, Literal, Optional, Set, Union
 
 class AllocCategory(Enum):
@@ -21,6 +22,9 @@ class Operations(Enum):
     NOT_EQUAL = 7
     ASSIGN = 8
     PRINT = 9
+    GOTOF = 10
+    GOTO = 11
+    END = 12
 
 @dataclass
 class AddressRange:
