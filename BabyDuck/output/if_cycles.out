@@ -180,18 +180,28 @@ Quads:
 <8> 5 1000 7001 5003
 <9> 10 5003 11 None
 <10> 8 1000 7001 None
-<11> 12 None None None
+<11> 6 1000 7002 5004
+<12> 10 5004 16 None
+<13> 2 1000 7003 5005
+<14> 8 1000 5005 None
+<15> 11 11 None None
+<16> 12 None None None
 --------
-<0> Operations.GREATER_THAN a 2 ti0
-<1> Operations.GOTOF ti0 5
-<2> Operations.PLUS a 2 ti1
-<3> Operations.ASSIGN c ti1
-<4> Operations.GOTO 7
-<5> Operations.MINUS a 2 ti2
-<6> Operations.ASSIGN c ti2
-<7> Operations.ASSIGN x 2
-<8> Operations.LESS_THAN x 5 ti3
-<9> Operations.GOTOF ti3 11
-<10> Operations.ASSIGN x 5
-<11> Operations.END
+<0> GREATER_THAN a 2 ti0
+<1> GOTOF ti0 5
+<2> PLUS a 2 ti1
+<3> ASSIGN c ti1
+<4> GOTO 7
+<5> MINUS a 2 ti2
+<6> ASSIGN c ti2
+<7> ASSIGN x 2
+<8> LESS_THAN x 5 ti3
+<9> GOTOF ti3 11
+<10> ASSIGN x 5
+<11> GREATER_THAN x 0 ti4
+<12> GOTOF ti4 16
+<13> MINUS x 1 ti5
+<14> ASSIGN x ti5
+<15> GOTO 11
+<16> END
 

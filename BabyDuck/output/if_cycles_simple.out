@@ -1,0 +1,352 @@
+Parse Tree:
+program_no_funcs
+  program
+  if_cycles_simple
+  ;
+  vars
+    var
+    var_declaration_single
+      x
+      :
+      type_int
+      ;
+  main
+  body_block
+    {
+    statement_assign
+      assign
+        x
+        =
+        expression_simple
+          exp_simple
+            term_simple
+              factor_cte
+                int	2
+        ;
+    statement_condition
+      condition_if
+        if
+        (
+        expression_compound
+          exp_simple
+            term_simple
+              factor_id	x
+          comparison_op	<
+          exp_simple
+            term_simple
+              factor_cte
+                int	5
+        )
+        body_block
+          {
+          statement_assign
+            assign
+              x
+              =
+              expression_simple
+                exp_compound
+                  term_simple
+                    factor_cte
+                      int	5
+                  +
+                  term_simple
+                    factor_cte
+                      int	2
+              ;
+          }
+        ;
+    statement_cycle
+      cycle
+        while
+        (
+        expression_compound
+          exp_simple
+            term_simple
+              factor_id	x
+          comparison_op	>
+          exp_simple
+            term_simple
+              factor_cte
+                int	0
+        )
+        do
+        body_block
+          {
+          statement_assign
+            assign
+              x
+              =
+              expression_simple
+                exp_compound
+                  term_simple
+                    factor_id	x
+                  -
+                  term_simple
+                    factor_cte
+                      int	1
+              ;
+          }
+        ;
+    statement_condition
+      condition_else
+        if
+        (
+        expression_compound
+          exp_simple
+            term_simple
+              factor_id	x
+          comparison_op	>
+          exp_simple
+            term_simple
+              factor_cte
+                int	0
+        )
+        body_block
+          {
+          statement_print
+            print_multiple
+              print
+              (
+              print_expression
+                expression_simple
+                  exp_simple
+                    term_simple
+                      factor_cte
+                        int	1
+              ,
+              print_expression
+                expression_simple
+                  exp_simple
+                    term_simple
+                      factor_cte
+                        int	2
+              )
+              ;
+          }
+        else
+        body_block
+          {
+          statement_print
+            print_multiple
+              print
+              (
+              print_expression
+                expression_simple
+                  exp_simple
+                    term_simple
+                      factor_cte
+                        int	3
+              ,
+              print_expression
+                expression_simple
+                  exp_simple
+                    term_simple
+                      factor_cte
+                        int	4
+              )
+              ;
+          }
+        ;
+    statement_condition
+      condition_if
+        if
+        (
+        expression_compound
+          exp_simple
+            term_simple
+              factor_id	x
+          comparison_op	<
+          exp_simple
+            term_simple
+              factor_cte
+                int	5
+        )
+        body_block
+          {
+          statement_print
+            print_multiple
+              print
+              (
+              print_expression
+                expression_simple
+                  exp_simple
+                    term_simple
+                      factor_cte
+                        int	1
+              ,
+              print_expression
+                expression_simple
+                  exp_simple
+                    term_simple
+                      factor_cte
+                        int	2
+              )
+              ;
+          statement_condition
+            condition_if
+              if
+              (
+              expression_compound
+                exp_simple
+                  term_simple
+                    factor_id	x
+                comparison_op	<
+                exp_simple
+                  term_simple
+                    factor_cte
+                      int	4
+              )
+              body_block
+                {
+                statement_print
+                  print_multiple
+                    print
+                    (
+                    print_expression
+                      expression_simple
+                        exp_simple
+                          term_simple
+                            factor_cte
+                              int	3
+                    ,
+                    print_expression
+                      expression_simple
+                        exp_simple
+                          term_simple
+                            factor_cte
+                              int	4
+                    )
+                    ;
+                statement_condition
+                  condition_if
+                    if
+                    (
+                    expression_compound
+                      exp_simple
+                        term_simple
+                          factor_id	x
+                      comparison_op	<
+                      exp_simple
+                        term_simple
+                          factor_cte
+                            int	3
+                    )
+                    body_block
+                      {
+                      statement_print
+                        print_multiple
+                          print
+                          (
+                          print_expression
+                            expression_simple
+                              exp_simple
+                                term_simple
+                                  factor_cte
+                                    int	5
+                          ,
+                          print_expression
+                            expression_simple
+                              exp_simple
+                                term_simple
+                                  factor_cte
+                                    int	6
+                          )
+                          ;
+                      statement_assign
+                        assign
+                          x
+                          =
+                          expression_simple
+                            exp_compound
+                              term_simple
+                                factor_cte
+                                  int	5
+                              +
+                              term_simple
+                                factor_cte
+                                  int	2
+                          ;
+                      }
+                    ;
+                }
+              ;
+          }
+        ;
+    }
+  end
+
+IR:
+Program(id='if_cycles_simple', vars=Vars(declarations=(VarDeclaration(type_='int', names=['x']),)), funcs=[], body=Body(statements=(Assign(id='x', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=2, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)), Condition(expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='x', sign='+'), operations=[]), operations=[]), op=<Operations.LESS_THAN: 5>, right_expr=Exp(left_term=Term(left_factor=Factor(value=5, sign='+'), operations=[]), operations=[])), if_body=Body(statements=(Assign(id='x', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=5, sign='+'), operations=[]), operations=[(<Operations.PLUS: 1>, Term(left_factor=Factor(value=2, sign='+'), operations=[]))]), op=None, right_expr=None)),)), else_body=None), Cycle(expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='x', sign='+'), operations=[]), operations=[]), op=<Operations.GREATER_THAN: 6>, right_expr=Exp(left_term=Term(left_factor=Factor(value=0, sign='+'), operations=[]), operations=[])), body=Body(statements=(Assign(id='x', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='x', sign='+'), operations=[]), operations=[(<Operations.MINUS: 2>, Term(left_factor=Factor(value=1, sign='+'), operations=[]))]), op=None, right_expr=None)),))), Condition(expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='x', sign='+'), operations=[]), operations=[]), op=<Operations.GREATER_THAN: 6>, right_expr=Exp(left_term=Term(left_factor=Factor(value=0, sign='+'), operations=[]), operations=[])), if_body=Body(statements=(Print(contents=[Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=1, sign='+'), operations=[]), operations=[]), op=None, right_expr=None), Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=2, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)]),)), else_body=Body(statements=(Print(contents=[Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=3, sign='+'), operations=[]), operations=[]), op=None, right_expr=None), Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=4, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)]),))), Condition(expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='x', sign='+'), operations=[]), operations=[]), op=<Operations.LESS_THAN: 5>, right_expr=Exp(left_term=Term(left_factor=Factor(value=5, sign='+'), operations=[]), operations=[])), if_body=Body(statements=(Print(contents=[Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=1, sign='+'), operations=[]), operations=[]), op=None, right_expr=None), Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=2, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)]), Condition(expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='x', sign='+'), operations=[]), operations=[]), op=<Operations.LESS_THAN: 5>, right_expr=Exp(left_term=Term(left_factor=Factor(value=4, sign='+'), operations=[]), operations=[])), if_body=Body(statements=(Print(contents=[Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=3, sign='+'), operations=[]), operations=[]), op=None, right_expr=None), Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=4, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)]), Condition(expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='x', sign='+'), operations=[]), operations=[]), op=<Operations.LESS_THAN: 5>, right_expr=Exp(left_term=Term(left_factor=Factor(value=3, sign='+'), operations=[]), operations=[])), if_body=Body(statements=(Print(contents=[Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=5, sign='+'), operations=[]), operations=[]), op=None, right_expr=None), Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=6, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)]), Assign(id='x', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=5, sign='+'), operations=[]), operations=[(<Operations.PLUS: 1>, Term(left_factor=Factor(value=2, sign='+'), operations=[]))]), op=None, right_expr=None)))), else_body=None))), else_body=None))), else_body=None))))
+
+Symbol Table:
+Scope: global
+  x: int = None
+
+
+Quads:
+<0> 8 1000 7000 None
+<1> 5 1000 7001 5000
+<2> 10 5000 5 None
+<3> 1 7001 7000 5001
+<4> 8 1000 5001 None
+<5> 6 1000 7002 5002
+<6> 10 5002 10 None
+<7> 2 1000 7003 5003
+<8> 8 1000 5003 None
+<9> 11 5 None None
+<10> 6 1000 7002 5004
+<11> 10 5004 15 None
+<12> 9 7003 None None
+<13> 9 7000 None None
+<14> 11 17 None None
+<15> 9 7004 None None
+<16> 9 7005 None None
+<17> 5 1000 7001 5005
+<18> 10 5005 31 None
+<19> 9 7003 None None
+<20> 9 7000 None None
+<21> 5 1000 7005 5006
+<22> 10 5006 31 None
+<23> 9 7004 None None
+<24> 9 7005 None None
+<25> 5 1000 7004 5007
+<26> 10 5007 31 None
+<27> 9 7001 None None
+<28> 9 7006 None None
+<29> 1 7001 7000 5008
+<30> 8 1000 5008 None
+<31> 12 None None None
+--------
+<0> ASSIGN x 2
+<1> LESS_THAN x 5 ti0
+<2> GOTOF ti0 5
+  <3> PLUS 5 2 ti1
+  <4> ASSIGN x ti1
+<5> GREATER_THAN x 0 ti2
+<6> GOTOF ti2 10
+  <7> MINUS x 1 ti3
+  <8> ASSIGN x ti3
+  <9> GOTO 5
+<10> GREATER_THAN x 0 ti4
+<11> GOTOF ti4 15
+  <12> PRINT 1
+  <13> PRINT 2
+  <14> GOTO 17
+<15> PRINT 3
+<16> PRINT 4
+<17> LESS_THAN x 5 ti5
+<18> GOTOF ti5 31
+  <19> PRINT 1
+  <20> PRINT 2
+  <21> LESS_THAN x 4 ti6
+  <22> GOTOF ti6 31
+    <23> PRINT 3
+    <24> PRINT 4
+    <25> LESS_THAN x 3 ti7
+    <26> GOTOF ti7 31
+      <27> PRINT 5
+      <28> PRINT 6
+      <29> PLUS 5 2 ti8
+      <30> ASSIGN x ti8
+<31> END
+

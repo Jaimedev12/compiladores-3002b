@@ -216,7 +216,7 @@ class BabyInterpreter:
             raise ValueError(f"Condition expression must be of type int, got {expr_type}.")
         
         self.add_quad(op=Operations.GOTOF, vdir1=expr_vdir)
-        open_if_pos = len(self.quads) - 1
+        gotof_pos = len(self.quads) - 1
         
         self.gen_quads_body(ir.if_body)
         
@@ -224,14 +224,25 @@ class BabyInterpreter:
             self.add_quad(op=Operations.GOTO, vdir1=-1)
             goto_quad_pos = len(self.quads) - 1
 
-            self.quads[open_if_pos].vdir2 = len(self.quads)
             self.gen_quads_body(ir.else_body)
             self.quads[goto_quad_pos].vdir1 = len(self.quads)
-        else:
-            self.quads[open_if_pos].vdir2 = len(self.quads)
+        
+        self.quads[gotof_pos].vdir2 = len(self.quads)
 
     def gen_quads_cycle(self, ir: Cycle): 
-        pass
+        quad_pos_bef_eval = len(self.quads)
+        expr_vdir = self.evaluate_expression(ir.expr)
+        expr_type = self.memory_manager.get_address_type(expr_vdir)
+        if expr_type != "int":
+            raise ValueError(f"Condition expression must be of type int, got {expr_type}.")
+        
+        self.add_quad(op=Operations.GOTOF, vdir1=expr_vdir)
+        open_pos = len(self.quads) - 1
+        
+        self.gen_quads_body(ir.body)
+
+        self.add_quad(op=Operations.GOTO, vdir1=quad_pos_bef_eval)
+        self.quads[open_pos].vdir2 = len(self.quads)
 
     def gen_quads_body(self, ir: Body): 
         for statement in ir.statements:

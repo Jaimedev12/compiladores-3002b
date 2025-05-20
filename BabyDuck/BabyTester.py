@@ -109,7 +109,7 @@ if __name__ == "__main__":
                         output_file.write("\n")
                     output_file.write("--------\n")
                     for i, quad in enumerate(quads):
-                        output_file.write(f"<{i}> {Operations(quad.op_vdir)}")
+                        output_file.write(f"<{i}> {str(Operations(quad.op_vdir))[11:]}")
                         if quad.vdir1:
                             if quad.op_vdir == Operations.GOTO.value:
                                 output_file.write(f" {quad.vdir1}")

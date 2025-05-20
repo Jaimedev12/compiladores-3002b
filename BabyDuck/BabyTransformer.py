@@ -197,6 +197,8 @@ class BabyTransformer(Transformer):
             op = Operations.LESS_THAN
         elif op == '>':
             op = Operations.GREATER_THAN
+        elif op == '!=':
+            op = Operations.NOT_EQUAL
         return Expression(left_expr=exp1, op=op, right_expr=exp2)
 
     """
