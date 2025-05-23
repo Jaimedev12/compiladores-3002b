@@ -154,10 +154,13 @@ class BabyInterpreter:
 
     
     def gen_quads_program(self, ir: Program):
+        self.add_quad(op=Operations.GOTO, vdir1=-1)
+        main_goto_pos = len(self.quads) - 1
         if ir.vars is not None: 
             self.gen_quads_vars(ir.vars)
         for func in ir.funcs:
             self.gen_quads_function(func)
+        self.quads[main_goto_pos].vdir1 = len(self.quads)
         self.gen_quads_body(ir.body)
         self.add_quad(op=Operations.END)
 

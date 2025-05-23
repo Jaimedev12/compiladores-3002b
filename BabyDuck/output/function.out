@@ -1,8 +1,15 @@
 Parse Tree:
-program_no_vars
+program_all
   program
   function
   ;
+  vars
+    var
+    var_declaration_single
+      x
+      :
+      type_int
+      ;
   funcs_no_vars
     void
     print_sum
@@ -14,7 +21,7 @@ program_no_vars
       ,
       num2
       :
-      type_int
+      type_float
     )
     [
     body_block
@@ -25,7 +32,7 @@ program_no_vars
           (
           print_expression
             expression_simple
-              exp_add
+              exp_compound
                 term_simple
                   factor_id	num1
                 +
@@ -39,6 +46,16 @@ program_no_vars
   main
   body_block
     {
+    statement_assign
+      assign
+        x
+        =
+        expression_simple
+          exp_simple
+            term_simple
+              factor_cte
+                int	3
+        ;
     statement_f_call
       f_call_with_args
         print_sum
@@ -47,24 +64,41 @@ program_no_vars
           expression_simple
             exp_simple
               term_simple
-                factor_cte
-                  int	3
+                factor_id	x
           ,
           expression_simple
             exp_simple
               term_simple
                 factor_cte
-                  int	4
+                  float	4.2
         )
         ;
     }
   end
 
 IR:
-Program(id='function', vars=None, funcs=(Function(return_type=Token('VOID', 'void'), id='print_sum', params=[Param(name='num1', type_='int'), Param(name='num2', type_='int')], vars=None, body=Body(statements=(Token('OPEN_KEY', '{'), Print(contents=[Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='num1', sign='+'), operations=[]), operations=[('+', Term(left_factor=Factor(value='num2', sign='+'), operations=[]))]), op=None, right_expr=None)]), Token('CLOSE_KEY', '}')))),), body=Body(statements=(Token('OPEN_KEY', '{'), FCall(id='print_sum', args=[Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=3, sign='+'), operations=[]), operations=[]), op=None, right_expr=None), Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=4, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)]), Token('CLOSE_KEY', '}'))))
+Program(id='function', vars=Vars(declarations=(VarDeclaration(type_='int', names=['x']),)), funcs=(Function(id='print_sum', params=[Param(name='num1', type_='int'), Param(name='num2', type_='float')], vars=None, body=Body(statements=(Print(contents=[Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='num1', sign='+'), operations=[]), operations=[(<Operations.PLUS: 1>, Term(left_factor=Factor(value='num2', sign='+'), operations=[]))]), op=None, right_expr=None)]),))),), body=Body(statements=(Assign(id='x', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=3, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)), FCall(id='print_sum', args=[Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='x', sign='+'), operations=[]), operations=[]), op=None, right_expr=None), Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=4.2, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)]))))
 
 Symbol Table:
-Symbol Table:
 Scope: global
+  x: int = None
 Scope: print_sum
+  num1: int = None
+  num2: float = None
+  Param: num1: int = None
+  Param: num2: float = None
+
+
+Quads:
+<0> 11 3 None None
+<1> 1 3000 4001 6000
+<2> 9 6000 None None
+<3> 8 1000 7000 None
+<4> 12 None None None
+--------
+<0> GOTO 3
+<1> PLUS num1 num2 tf0
+<2> PRINT tf0
+<3> ASSIGN x 3
+<4> END
 

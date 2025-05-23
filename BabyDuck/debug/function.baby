@@ -1,0 +1,15 @@
+program function;
+var x: int;
+
+void print_sum(num1: int, num2: float) [
+    {
+        print(num1 + num2);
+    }
+];
+
+main {
+    x = 3;
+    print_sum(x, 4.2);
+}
+
+end
