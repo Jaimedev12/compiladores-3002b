@@ -3,6 +3,7 @@ from SemanticCube import SemanticCube
 from node_dataclasses import *
 from SymbolTable import SymbolTable
 from MemoryManager import AllocCategory, Operations, MemoryManager
+from FunctionTable import FunctionTable
 # from lark import Tree
 
 class BabyInterpreter:
@@ -12,6 +13,7 @@ class BabyInterpreter:
         self.semantic_cube = SemanticCube()
         self.quads: List[Quad] = []
         self.memory_manager = memory_manager
+        self.function_table = FunctionTable(memory_manager=memory_manager)
 
     def add_quad(
             self, 
@@ -19,10 +21,11 @@ class BabyInterpreter:
             vdir1: Optional[int] = None, 
             vdir2: Optional[int] = None, 
             storage_vdir: Optional[int] = None,
+            label: Optional[str] = None,
             ) -> Quad:
         """Add a quadruple to the list of quads."""
 
-        quad = Quad(op_vdir=op.value, vdir1=vdir1, vdir2=vdir2, storage_vdir=storage_vdir, scope=self.current_scope)
+        quad = Quad(op_vdir=op.value, vdir1=vdir1, vdir2=vdir2, storage_vdir=storage_vdir, scope=self.current_scope, label=label)
         self.quads.append(quad)
         return quad
 
@@ -181,10 +184,14 @@ class BabyInterpreter:
     def gen_quads_function(self, ir: Function): 
         self.current_scope = ir.id
         self.symbol_table.add_function(name=ir.id, params=ir.params, body=ir.body)
+        self.function_table.add_function(ir, start_quad=len(self.quads))
         if ir.vars is not None: 
             self.gen_quads_vars(ir.vars)
         self.gen_quads_body(ir.body)
+        
+        self.function_table.update_allocation_tracker(name=ir.id)
         self.current_scope = "global"
+        self.add_quad(op=Operations.ENDFUNC)
 
     def gen_quads_assign(self, ir: Assign): 
         expr_vdir = self.evaluate_expression(ir.expr)
@@ -253,10 +260,42 @@ class BabyInterpreter:
 
     def gen_quads_f_call(self, ir: FCall): 
         self.current_scope = ir.id
-        # Check if function is declared
-        if not self.symbol_table.is_function_declared(ir.id):
+
+        function_register = self.function_table.get_function(ir.id)
+        if function_register is None:
             raise ValueError(f"Function {ir.id} is not declared.")
+
+        if len(ir.args) != len(function_register.param_types):
+            raise ValueError(f"Function {ir.id} expects {len(function_register.param_types)} arguments, got {len(ir.args)}.")
+
+        self.add_quad(op=Operations.ALLOC, label=ir.id)
+        
+        for i, arg in enumerate(ir.args):
+            expr_vdir = self.evaluate_expression(arg)
+            expr_type = self.memory_manager.get_address_type(expr_vdir)
+
+            param_type = function_register.param_types[i]
+            if not self.semantic_cube.is_decl_valid(from_type=expr_type, to_type=param_type):
+                raise ValueError(f"Invalid argument type: {expr_type} cannot be passed to function {ir.id}.")
+            
+            new_type = self.semantic_cube.get_resulting_type(
+                type1=param_type, 
+                type2=expr_type,
+                operation=Operations.ASSIGN
+            )
+
+            print(f"Converting {expr_type} to {new_type}")
+            if expr_type != new_type:
+                # Convert the expression to the expected type
+                prev_vdir = expr_vdir
+                if new_type == "int":
+                    expr_vdir = self.memory_manager.allocate(AllocCategory.TEMP_INT)
+                elif new_type == "float":
+                    expr_vdir = self.memory_manager.allocate(AllocCategory.TEMP_FLOAT)
+                self.add_quad(op=Operations.ASSIGN, vdir1=prev_vdir, storage_vdir=expr_vdir)
+
+            self.add_quad(op=Operations.PARAM, vdir1=expr_vdir)
+        # Check if function is declared
+        
             
         self.current_scope = "global"
-
-        pass

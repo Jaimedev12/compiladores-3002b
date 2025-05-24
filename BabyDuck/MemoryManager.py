@@ -25,12 +25,17 @@ class Operations(Enum):
     GOTOF = 10
     GOTO = 11
     END = 12
+    ALLOC = 13
+    PARAM = 14
+    CALL = 15
+    ENDFUNC = 16
 
 @dataclass
 class AddressRange:
     start: int
     end: int
     current: int
+
 
 class MemoryManager:
     def __init__(self,
@@ -53,25 +58,25 @@ class MemoryManager:
             AllocCategory.CONSTANT: AddressRange(constant_start, constant_start + range_size - 1, current=constant_start),
         }
 
-        self.current_per_local: Dict[str, int] = dict()
+        self.size_per_local: Dict[str, Dict[AllocCategory, int]] = dict()
 
         self.constants_string: Dict[str, int] = dict()
         self.constants_int: Dict[int, int] = dict()
         self.constants_float: Dict[float, int] = dict()
         self.constants: Dict[int, Union[int, float, str]] = dict()
 
-    def _allocate_local(self, local_name: Optional[str], var_type: AllocCategory) -> int:
-        if local_name is None:
-            raise ValueError("Local name must be provided for local variables.")
-        if local_name not in self.current_per_local:
-            self.current_per_local[local_name] = 0
+    def _allocate_local(self, local_name: str, var_type: AllocCategory) -> int:
+        if local_name not in self.size_per_local:
+            self.size_per_local[local_name] = {}
+        if var_type not in self.size_per_local[local_name]:
+            self.size_per_local[local_name][var_type] = 0   
 
         range_info = self.address_ranges[var_type]
-        if self.current_per_local[local_name] > range_info.end - range_info.start:
+        if self.size_per_local[local_name].get(var_type, 0) > range_info.end - range_info.start:
             raise OverflowError(f"No more memory in {var_type.name} range for {local_name}")
 
-        address = range_info.start + self.current_per_local[local_name]
-        self.current_per_local[local_name] += 1
+        address = range_info.start + self.size_per_local[local_name].get(var_type, 0)
+        self.size_per_local[local_name][var_type] += 1
         return address
 
     def _allocate_constant(self, value: Optional[Union[int, float, str]]) -> int:
@@ -105,7 +110,7 @@ class MemoryManager:
     def allocate(
             self, 
             var_type: AllocCategory, 
-            local_name: Optional[str] = None, 
+            local_name: str = "global", 
             const_value: Optional[Union[int, float, str]] = None
             ) -> int:
         if var_type == AllocCategory.LOCAL_INT or var_type == AllocCategory.LOCAL_FLOAT:

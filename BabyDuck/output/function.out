@@ -10,7 +10,7 @@ program_all
       :
       type_int
       ;
-  funcs_no_vars
+  funcs_all
     void
     print_sum
     (
@@ -21,9 +21,22 @@ program_all
       ,
       num2
       :
-      type_float
+      type_int
     )
     [
+    vars
+      var
+      var_declaration_multiple
+        a
+        ,
+        b
+        ,
+        c
+        ,
+        d
+        :
+        type_int
+        ;
     body_block
       {
       statement_print
@@ -77,28 +90,42 @@ program_all
   end
 
 IR:
-Program(id='function', vars=Vars(declarations=(VarDeclaration(type_='int', names=['x']),)), funcs=(Function(id='print_sum', params=[Param(name='num1', type_='int'), Param(name='num2', type_='float')], vars=None, body=Body(statements=(Print(contents=[Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='num1', sign='+'), operations=[]), operations=[(<Operations.PLUS: 1>, Term(left_factor=Factor(value='num2', sign='+'), operations=[]))]), op=None, right_expr=None)]),))),), body=Body(statements=(Assign(id='x', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=3, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)), FCall(id='print_sum', args=[Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='x', sign='+'), operations=[]), operations=[]), op=None, right_expr=None), Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=4.2, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)]))))
+Program(id='function', vars=Vars(declarations=(VarDeclaration(type_='int', names=['x']),)), funcs=(Function(id='print_sum', params=[Param(name='num1', type_='int'), Param(name='num2', type_='int')], vars=Vars(declarations=(VarDeclaration(type_='int', names=['a', 'b', 'c', 'd']),)), body=Body(statements=(Print(contents=[Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='num1', sign='+'), operations=[]), operations=[(<Operations.PLUS: 1>, Term(left_factor=Factor(value='num2', sign='+'), operations=[]))]), op=None, right_expr=None)]),))),), body=Body(statements=(Assign(id='x', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=3, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)), FCall(id='print_sum', args=[Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='x', sign='+'), operations=[]), operations=[]), op=None, right_expr=None), Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=4.2, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)]))))
 
 Symbol Table:
 Scope: global
   x: int = None
 Scope: print_sum
   num1: int = None
-  num2: float = None
+  num2: int = None
+  a: int = None
+  b: int = None
+  c: int = None
+  d: int = None
   Param: num1: int = None
-  Param: num2: float = None
+  Param: num2: int = None
 
 
 Quads:
-<0> 11 3 None None
-<1> 1 3000 4001 6000
-<2> 9 6000 None None
-<3> 8 1000 7000 None
-<4> 12 None None None
+<0> 11 4 None None
+<1> 1 3000 3001 5000
+<2> 9 5000 None None
+<3> 16 None None None
+<4> 8 1000 7000 None
+<5> 13 None None None -> print_sum
+<6> 14 1000 None None
+<7> 8 7001 None 5001
+<8> 14 5001 None None
+<9> 12 None None None
 --------
-<0> GOTO 3
-<1> PLUS num1 num2 tf0
-<2> PRINT tf0
-<3> ASSIGN x 3
-<4> END
+<0> GOTO 4
+<1> PLUS num1 num2 ti0
+<2> PRINT ti0
+<3> ENDFUNC
+<4> ASSIGN x 3
+<5> ALLOC -> print_sum
+<6> PARAM x
+<7> ASSIGN 4.2 ti1
+<8> PARAM ti1
+<9> END
 

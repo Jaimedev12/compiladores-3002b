@@ -1,7 +1,8 @@
 program function;
 var x: int;
 
-void print_sum(num1: int, num2: float) [
+void print_sum(num1: int, num2: int) [
+    var a, b, c, d: int;
     {
         print(num1 + num2);
     }
