@@ -1,19 +1,30 @@
+from dataclasses import dataclass
 from datetime import datetime
 import sys
 import pickle
 import os
 import contextlib
-from lark import Lark, UnexpectedInput
+from lark import Lark
 from BabyTransformer import BabyTransformer
 from BabyInterpreter import BabyInterpreter
-from SymbolTable import SymbolTable
+from SymbolTable import SymbolTable, Scope
 from MemoryManager import MemoryManager, Operations, AllocCategory
+from typing import Dict, List, Any, Union
+from util_dataclasses import ConstantValue, Quad
 
     
-# Parse command-line arguments
-# parser = argparse.ArgumentParser(description="Run a BabyScript program.")
-# parser.add_argument("input_file", help="Path to the BabyScript input file")
-# args = parser.parse_args()
+@dataclass
+class ObjectFileMetadata:
+    filename: str
+    timestamp: str
+
+@dataclass
+class ObjData:
+    metadata: ObjectFileMetadata
+    constants: Dict[int, ConstantValue]
+    functions: Dict[str, Scope]
+    quads: List[Quad]
+
 
 # Import grammar from file
 with open('grammar.lark', 'r') as file:
@@ -122,17 +133,17 @@ def gen_obj():
 
                     print(f"Successfully compiled {filename} to {base_name}.ovejota")
 
-                    with open(output_object_filename, 'wb') as output_file:
-                        obj_data = {
-                            'metadata': {
-                                'filename': base_name,
-                                'timestamp': datetime.now().isoformat(),
-                            },
-                            'constants': memory_manager.constants,
-                            'functions': {name: scope.__dict__ for name, scope in symbol_table.scopes.items()},
-                            'quads': [quad.__dict__ for quad in baby_interpreter.quads],
-                        }
-                        pickle.dump(obj_data, output_file)
+                    with open(output_object_filename, 'wb') as binary_output:
+                        obj_data = ObjData(
+                            metadata=ObjectFileMetadata(
+                                filename=base_name,
+                                timestamp=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                            ),
+                            constants=memory_manager.constants,
+                            functions=symbol_table.scopes,
+                            quads=baby_interpreter.quads
+                        )
+                        pickle.dump(obj_data, binary_output)
 
 
         sys.stdout = sys.__stdout__

@@ -1,41 +1,6 @@
 from dataclasses import dataclass
-from enum import Enum
-from tkinter import END
-from typing import Dict, Literal, Optional, Set, Union, List
-
-class AllocCategory(Enum):
-    GLOBAL_INT = 1
-    GLOBAL_FLOAT = 2
-    LOCAL_INT = 3
-    LOCAL_FLOAT = 4
-    TEMP_INT = 5
-    TEMP_FLOAT = 6
-    CONSTANT = 7
-
-class Operations(Enum):
-    PLUS = 1
-    MINUS = 2
-    MULT = 3
-    DIV = 4
-    LESS_THAN = 5
-    GREATER_THAN = 6
-    NOT_EQUAL = 7
-    ASSIGN = 8
-    PRINT = 9
-    GOTOF = 10
-    GOTO = 11
-    END = 12
-    ALLOC = 13
-    PARAM = 14
-    CALL = 15
-    ENDFUNC = 16
-    GOSUB = 17
-
-@dataclass
-class AddressRange:
-    start: int
-    end: int
-    current: int
+from typing import Dict, Literal, Optional, Union, List
+from util_dataclasses import *
 
 
 class MemoryManager:
@@ -64,7 +29,7 @@ class MemoryManager:
         self.constants_string: Dict[str, int] = dict()
         self.constants_int: Dict[int, int] = dict()
         self.constants_float: Dict[float, int] = dict()
-        self.constants: Dict[int, Union[int, float, str]] = dict()
+        self.constants: Dict[int, ConstantValue] = dict()
 
     def _allocate_local(self, local_name: str, var_type: AllocCategory) -> int:
         if local_name not in self.size_per_local:
@@ -80,7 +45,7 @@ class MemoryManager:
         self.size_per_local[local_name][var_type] += 1
         return address
     
-    def _allocate_constant(self, value: Optional[Union[int, float, str]]) -> int:
+    def _allocate_constant(self, value: Optional[ConstantValue]) -> int:
         if value is None:
             raise ValueError("Constant value must be provided for constant variables.")
         address = self.address_ranges[AllocCategory.CONSTANT].current
@@ -112,7 +77,7 @@ class MemoryManager:
             self, 
             var_type: AllocCategory, 
             local_name: str, 
-            const_value: Optional[Union[int, float, str]] = None
+            const_value: Optional[ConstantValue] = None
             ) -> int:
         if (var_type == AllocCategory.LOCAL_INT or \
             var_type == AllocCategory.LOCAL_FLOAT or \

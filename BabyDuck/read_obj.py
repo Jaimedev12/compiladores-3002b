@@ -1,82 +1,105 @@
 import pickle
-import os
 import sys
-from datetime import datetime
+import os
 from typing import Dict, List, Any
+from dataclasses import dataclass
+from datetime import datetime
 
-def load_object_file(obj_file_path: str) -> Dict[str, Any]:
+# Import the same dataclasses to ensure compatibility
+from util_dataclasses import Quad, ConstantValue
+from SymbolTable import Scope
+
+@dataclass
+class ObjectFileMetadata:
+    filename: str
+    timestamp: str
+
+@dataclass
+class ObjData:
+    metadata: ObjectFileMetadata
+    constants: Dict[int, ConstantValue]
+    functions: Dict[str, Scope]
+    quads: List[Quad]
+
+def read_obj_file(obj_path: str) -> ObjData:
     """
-    Load a compiled BabyDuck object file.
+    Read and deserialize a BabyDuck object file
     
     Args:
-        obj_file_path: Path to the .obj file
+        obj_path: Path to the .obj file
         
     Returns:
-        Dictionary containing the object file data
+        ObjData object containing the deserialized data
     """
     try:
-        with open(obj_file_path, 'rb') as file:
+        with open(obj_path, 'rb') as file:
             obj_data = pickle.load(file)
             return obj_data
     except FileNotFoundError:
-        print(f"Error: Object file '{obj_file_path}' not found.")
+        print(f"Error: Object file '{obj_path}' not found")
         sys.exit(1)
     except pickle.UnpicklingError:
-        print(f"Error: '{obj_file_path}' is not a valid BabyDuck object file.")
+        print(f"Error: '{obj_path}' is not a valid BabyDuck object file")
         sys.exit(1)
 
-def print_obj_info(obj_data: Dict[str, Any]) -> None:
-    """Print information about the loaded object file."""
-    metadata = obj_data.get('metadata', {})
-    
-    print("BABYDUCK OBJECT FILE")
-    print("===================")
-    print(f"Filename: {metadata.get('filename', 'Unknown')}")
-    print(f"Compiled on: {metadata.get('timestamp', 'Unknown')}")
+def display_obj_info(obj_data: ObjData):
+    """Display information about the loaded object file"""
+    print("===== BabyDuck Object File =====")
+    print(f"Program: {obj_data.metadata.filename}")
+    print(f"Compiled: {obj_data.metadata.timestamp}")
     print()
     
-    # Print constants
-    print("CONSTANTS TABLE")
-    print("==============")
-    constants = obj_data.get('constants', {})
-    for addr, value in constants.items():
-        print(f"[{addr}] = {repr(value)}")
+    # Display constants
+    print("===== Constants Table =====")
+    for addr, value in obj_data.constants.items():
+        value_str = repr(value)
+        print(f"[{addr}] = {value_str}")
     print()
     
-    # Print functions
-    print("FUNCTION DIRECTORY")
-    print("=================")
-    functions = obj_data.get('functions', {})
-    for func_name, func_data in functions.items():
-        if func_name == "global":
-            continue
-        print(f"Function: {func_name}")
-        if 'params' in func_data:
-            print(f"  Parameters: {len(func_data['params'])}")
+    # Display functions/scopes
+    print("===== Function Directory =====")
+    for name, scope in obj_data.functions.items():
+        if name == "global":
+            print(f"Global Scope: {len(scope.symbols)} symbols")
+        else:
+            print(f"Function: {name}")
+            print(f"  Parameters: {len(scope.param_list)}")
+            print(f"  Local Variables: {len(scope.symbols) - len(scope.param_list)}")
     print()
     
-    # Print quads
-    print("QUADRUPLES")
-    print("==========")
-    quads = obj_data.get('quads', [])
-    for i, quad in enumerate(quads):
-        op = quad.get('op_vdir', '?')
-        vdir1 = quad.get('vdir1', None)
-        vdir2 = quad.get('vdir2', None)
-        storage_vdir = quad.get('storage_vdir', None)
-        label = quad.get('label', None)
+    # Display quads
+    print("===== Quadruples =====")
+    for i, quad in enumerate(obj_data.quads):
+        quad_str = f"{i}: {quad.op_vdir}"
         
-        quad_str = f"{i}: {op}"
-        if vdir1 is not None:
-            quad_str += f" {vdir1}"
-        if vdir2 is not None:
-            quad_str += f" {vdir2}"
-        if storage_vdir is not None:
-            quad_str += f" -> {storage_vdir}"
-        if label is not None:
-            quad_str += f" [{label}]"
+        if quad.vdir1 is not None:
+            quad_str += f" {quad.vdir1}"
+            
+        if quad.vdir2 is not None:
+            quad_str += f" {quad.vdir2}"
+            
+        if quad.storage_vdir is not None:
+            quad_str += f" -> {quad.storage_vdir}"
+            
+        if quad.label is not None:
+            quad_str += f" [{quad.label}]"
             
         print(quad_str)
+
+# def main():
+#     if len(sys.argv) < 2:
+#         print("Usage: python read_obj.py <object_file.obj>")
+#         sys.exit(1)
+        
+#     obj_path = sys.argv[1]
+#     if not obj_path.endswith('.obj'):
+#         obj_path += '.obj'
+        
+#     obj_data = read_obj_file(obj_path)
+#     display_obj_info(obj_data)
+
+# if __name__ == "__main__":
+#     main()
 
 def main():
 
@@ -84,10 +107,12 @@ def main():
 
     if len(sys.argv) == 2:
         obj_file_path = sys.argv[1]
+        if not obj_file_path.endswith('.obj'):
+            obj_file_path += '.obj'
 
-    obj_data = load_object_file(obj_file_path)
-    print_obj_info(obj_data)
-    
+    obj_data = read_obj_file(obj_file_path)
+    display_obj_info(obj_data)
+
     # You could also implement a virtual machine here to execute the bytecode
     print("\nTo run this program, use baby_vm.py")
 

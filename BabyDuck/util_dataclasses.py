@@ -1,11 +1,58 @@
 from dataclasses import dataclass, field
-from tkinter import Variable
-from turtle import right
+from enum import Enum
 from typing import List, Optional, Union, Tuple, Literal
-from MemoryManager import Operations
 
 ValueType = Literal["int", "float", "str"]
+ConstantValue = Union[int, float, str]
+
 VariableType = Literal["int", "float"]
+VariableValues = Union[int, float]
+
+
+class AllocCategory(Enum):
+    GLOBAL_INT = 1
+    GLOBAL_FLOAT = 2
+    LOCAL_INT = 3
+    LOCAL_FLOAT = 4
+    TEMP_INT = 5
+    TEMP_FLOAT = 6
+    CONSTANT = 7
+
+class Operations(Enum):
+    PLUS = 1
+    MINUS = 2
+    MULT = 3
+    DIV = 4
+    LESS_THAN = 5
+    GREATER_THAN = 6
+    NOT_EQUAL = 7
+    ASSIGN = 8
+    PRINT = 9
+    GOTOF = 10
+    GOTO = 11
+    END = 12
+    ALLOC = 13
+    PARAM = 14
+    CALL = 15
+    ENDFUNC = 16
+    GOSUB = 17
+
+@dataclass
+class AddressRange:
+    start: int
+    end: int
+    current: int
+
+
+@dataclass
+class Symbol:
+    name: str
+    data_type: VariableType
+    vdir: int = 0
+    value: Optional[Union[int, float]] = None
+    is_param: bool = False
+    param_index: Optional[int] = None
+
 
 @dataclass
 class Quad():

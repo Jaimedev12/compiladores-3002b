@@ -1,6 +1,6 @@
 from typing import List, Optional
 from SemanticCube import SemanticCube
-from node_dataclasses import *
+from util_dataclasses import *
 from SymbolTable import SymbolTable
 from MemoryManager import AllocCategory, Operations, MemoryManager
 

@@ -1,7 +1,5 @@
-
-
 # BabyDuck Object File: function
-# Generated on 2025-05-26 09:24:51
+# Generated on 2025-05-26 10:24:46
 
 # Constants Table
 7000 3
@@ -26,5 +24,6 @@ FUNC print_sum_2
 11 13 -> print_sum
 12 14 1000
 13 14 7001
-14 12
+14 17 1
+15 12
 Successfully compiled function.baby to function.ovejota

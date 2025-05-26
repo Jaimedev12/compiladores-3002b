@@ -1,6 +1,6 @@
 from lark import Transformer, v_args
 from lark import Lark
-from node_dataclasses import Program, Vars, VarDeclaration, Function, Param, Assign, Print, Condition, Cycle, Body, FCall, Expression, Exp, Term, Factor, Statement
+from util_dataclasses import Program, Vars, VarDeclaration, Function, Param, Assign, Print, Condition, Cycle, Body, FCall, Expression, Exp, Term, Factor, Statement
 from typing import cast, List, Any
 from MemoryManager import Operations
 

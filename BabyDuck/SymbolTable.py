@@ -1,17 +1,8 @@
 from typing import Union, Optional, Any, List, Dict
 from dataclasses import dataclass
-from node_dataclasses import Param, Vars, Body, VariableType
-from MemoryManager import MemoryManager, AllocCategory
+from util_dataclasses import Param, Body, VariableType, AllocCategory, Symbol
+from MemoryManager import MemoryManager
 
-@dataclass
-class Symbol:
-    name: str
-    data_type: VariableType
-    vdir: int = 0
-    value: Optional[Union[int, float]] = None
-    # category: str = "var"
-    is_param: bool = False
-    param_index: Optional[int] = None
 
 class Scope:
     def __init__(self, name: str, starting_quad: int, body: Optional[Body] = None):
