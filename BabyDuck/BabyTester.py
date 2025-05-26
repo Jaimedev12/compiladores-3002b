@@ -56,7 +56,7 @@ def parse_code(input_code, memory_manager: MemoryManager, symbol_table: SymbolTa
         # print("\nSymbol Table after execution:")
         # symbol_table.display()
 
-        return (tree.pretty(), ir, symbol_table.to_string(), baby_interpreter.quads)
+        return (tree.pretty(), ir, symbol_table.to_string(), memory_manager.to_string(), baby_interpreter.quads)
     except UnexpectedInput as e:
         print(f"Parsing failed: {e}")
         raise e  # Re-raise the exception for further handling
@@ -91,7 +91,7 @@ if __name__ == "__main__":
             with contextlib.redirect_stdout(log_file):
                 with open(input_filename, 'r', encoding='utf-8') as input_file:
                     program = input_file.read()
-                    tree, ir, symbol_table_string, quads = parse_code(program, memory_manager=memory_manager, symbol_table=symbol_table)
+                    tree, ir, symbol_table_string, memory_manager_string, quads = parse_code(program, memory_manager=memory_manager, symbol_table=symbol_table)
                 
                 with open(output_filename, 'w', encoding='utf-8') as output_file:
                     output_file.write("Parse Tree:\n")
@@ -100,6 +100,9 @@ if __name__ == "__main__":
                     output_file.write(str(ir))
                     output_file.write("\n\nSymbol Table:\n")
                     output_file.write(symbol_table_string)
+                    output_file.write("\n")
+                    output_file.write("\nMemory Manager:\n")
+                    output_file.write(memory_manager_string)
                     output_file.write("\n")
                     output_file.write("\nQuads:\n")
                     for i, quad in enumerate(quads):
@@ -111,7 +114,7 @@ if __name__ == "__main__":
                     for i, quad in enumerate(quads):
                         output_file.write(f"<{i}> {str(Operations(quad.op_vdir))[11:]}")
                         if quad.vdir1:
-                            if quad.op_vdir == Operations.GOTO.value:
+                            if quad.op_vdir == Operations.GOTO.value or quad.op_vdir == Operations.GOSUB.value:
                                 output_file.write(f" {quad.vdir1}")
                             else:
                                 output_file.write(f" {get_symbol_name(symbol_table, memory_manager, vdir=quad.vdir1, scope_name=quad.scope)}")

@@ -21,7 +21,7 @@ program_all
       ,
       num2
       :
-      type_int
+      type_float
     )
     [
     vars
@@ -51,6 +51,66 @@ program_all
                 +
                 term_simple
                   factor_id	num2
+          )
+          ;
+      }
+    ]
+    ;
+  funcs_all
+    void
+    print_sum_2
+    (
+    params_multiple
+      num1
+      :
+      type_int
+      ,
+      num2
+      :
+      type_int
+    )
+    [
+    vars
+      var
+      var_declaration_multiple
+        a
+        ,
+        b
+        ,
+        c
+        ,
+        d
+        :
+        type_float
+        ;
+    body_block
+      {
+      statement_assign
+        assign
+          a
+          =
+          expression_simple
+            exp_compound
+              term_compound
+                factor_id	b
+                *
+                factor_id	a
+              +
+              term_simple
+                factor_id	c
+          ;
+      statement_print
+        print_single
+          print
+          (
+          print_expression
+            expression_simple
+              exp_compound
+                term_simple
+                  factor_id	num1
+                +
+                term_simple
+                  factor_id	a
           )
           ;
       }
@@ -90,42 +150,90 @@ program_all
   end
 
 IR:
-Program(id='function', vars=Vars(declarations=(VarDeclaration(type_='int', names=['x']),)), funcs=(Function(id='print_sum', params=[Param(name='num1', type_='int'), Param(name='num2', type_='int')], vars=Vars(declarations=(VarDeclaration(type_='int', names=['a', 'b', 'c', 'd']),)), body=Body(statements=(Print(contents=[Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='num1', sign='+'), operations=[]), operations=[(<Operations.PLUS: 1>, Term(left_factor=Factor(value='num2', sign='+'), operations=[]))]), op=None, right_expr=None)]),))),), body=Body(statements=(Assign(id='x', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=3, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)), FCall(id='print_sum', args=[Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='x', sign='+'), operations=[]), operations=[]), op=None, right_expr=None), Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=4.2, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)]))))
+Program(id='function', vars=Vars(declarations=(VarDeclaration(type_='int', names=['x']),)), funcs=(Function(id='print_sum', params=[Param(name='num1', type_='int'), Param(name='num2', type_='float')], vars=Vars(declarations=(VarDeclaration(type_='int', names=['a', 'b', 'c', 'd']),)), body=Body(statements=(Print(contents=[Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='num1', sign='+'), operations=[]), operations=[(<Operations.PLUS: 1>, Term(left_factor=Factor(value='num2', sign='+'), operations=[]))]), op=None, right_expr=None)]),))), Function(id='print_sum_2', params=[Param(name='num1', type_='int'), Param(name='num2', type_='int')], vars=Vars(declarations=(VarDeclaration(type_='float', names=['a', 'b', 'c', 'd']),)), body=Body(statements=(Assign(id='a', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='b', sign='+'), operations=[(<Operations.MULT: 3>, Factor(value='a', sign='+'))]), operations=[(<Operations.PLUS: 1>, Term(left_factor=Factor(value='c', sign='+'), operations=[]))]), op=None, right_expr=None)), Print(contents=[Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='num1', sign='+'), operations=[]), operations=[(<Operations.PLUS: 1>, Term(left_factor=Factor(value='a', sign='+'), operations=[]))]), op=None, right_expr=None)]))))), body=Body(statements=(Assign(id='x', expr=Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=3, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)), FCall(id='print_sum', args=[Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value='x', sign='+'), operations=[]), operations=[]), op=None, right_expr=None), Expression(left_expr=Exp(left_term=Term(left_factor=Factor(value=4.2, sign='+'), operations=[]), operations=[]), op=None, right_expr=None)]))))
 
 Symbol Table:
 Scope: global
   x: int = None
 Scope: print_sum
   num1: int = None
-  num2: int = None
+  num2: float = None
   a: int = None
   b: int = None
   c: int = None
   d: int = None
   Param: num1: int = None
+  Param: num2: float = None
+Scope: print_sum_2
+  num1: int = None
+  num2: int = None
+  a: float = None
+  b: float = None
+  c: float = None
+  d: float = None
+  Param: num1: int = None
   Param: num2: int = None
 
 
+Memory Manager:
+
+Address Ranges:
+  GLOBAL_INT: 1000-1999 (current: 1001)
+  GLOBAL_FLOAT: 2000-2999 (current: 2000)
+  LOCAL_INT: 3000-3999 (current: 3000)
+  LOCAL_FLOAT: 4000-4999 (current: 4000)
+  TEMP_INT: 5000-5999 (current: 5000)
+  TEMP_FLOAT: 6000-6999 (current: 6000)
+  CONSTANT: 7000-7999 (current: 7002)
+
+Local Allocations:
+  print_sum:
+    LOCAL_INT: 5 variables
+    LOCAL_FLOAT: 1 variables
+    TEMP_FLOAT: 1 variables
+  print_sum_2:
+    LOCAL_INT: 2 variables
+    LOCAL_FLOAT: 4 variables
+    TEMP_FLOAT: 3 variables
+
+Constants:
+  Integers:
+    3 -> 7000
+  Floats:
+    4.2 -> 7001
+
 Quads:
-<0> 11 4 None None
-<1> 1 3000 3001 5000
-<2> 9 5000 None None
+<0> 11 10 None None
+<1> 1 3000 4000 6000
+<2> 9 6000 None None
 <3> 16 None None None
-<4> 8 1000 7000 None
-<5> 13 None None None -> print_sum
-<6> 14 1000 None None
-<7> 8 7001 None 5001
-<8> 14 5001 None None
-<9> 12 None None None
+<4> 3 4001 4000 6000
+<5> 1 6000 4002 6001
+<6> 8 4000 6001 None
+<7> 1 3000 4000 6002
+<8> 9 6002 None None
+<9> 16 None None None
+<10> 8 1000 7000 None
+<11> 13 None None None -> print_sum
+<12> 14 1000 None None
+<13> 14 7001 None None
+<14> 17 1 None None
+<15> 12 None None None
 --------
-<0> GOTO 4
-<1> PLUS num1 num2 ti0
-<2> PRINT ti0
+<0> GOTO 10
+<1> PLUS num1 num2 tf0
+<2> PRINT tf0
 <3> ENDFUNC
-<4> ASSIGN x 3
-<5> ALLOC -> print_sum
-<6> PARAM x
-<7> ASSIGN 4.2 ti1
-<8> PARAM ti1
-<9> END
+<4> MULT b a tf0
+<5> PLUS tf0 c tf1
+<6> ASSIGN a tf1
+<7> PLUS num1 a tf2
+<8> PRINT tf2
+<9> ENDFUNC
+<10> ASSIGN x 3
+<11> ALLOC -> print_sum
+<12> PARAM x
+<13> PARAM 4.2
+<14> GOSUB 1
+<15> END
 

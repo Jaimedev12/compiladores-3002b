@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
 from tkinter import END
-from typing import Dict, Literal, Optional, Set, Union
+from typing import Dict, Literal, Optional, Set, Union, List
 
 class AllocCategory(Enum):
     GLOBAL_INT = 1
@@ -29,6 +29,7 @@ class Operations(Enum):
     PARAM = 14
     CALL = 15
     ENDFUNC = 16
+    GOSUB = 17
 
 @dataclass
 class AddressRange:
@@ -78,7 +79,7 @@ class MemoryManager:
         address = range_info.start + self.size_per_local[local_name].get(var_type, 0)
         self.size_per_local[local_name][var_type] += 1
         return address
-
+    
     def _allocate_constant(self, value: Optional[Union[int, float, str]]) -> int:
         if value is None:
             raise ValueError("Constant value must be provided for constant variables.")
@@ -110,10 +111,13 @@ class MemoryManager:
     def allocate(
             self, 
             var_type: AllocCategory, 
-            local_name: str = "global", 
+            local_name: str, 
             const_value: Optional[Union[int, float, str]] = None
             ) -> int:
-        if var_type == AllocCategory.LOCAL_INT or var_type == AllocCategory.LOCAL_FLOAT:
+        if (var_type == AllocCategory.LOCAL_INT or \
+            var_type == AllocCategory.LOCAL_FLOAT or \
+            var_type == AllocCategory.TEMP_INT or \
+            var_type == AllocCategory.TEMP_FLOAT) and local_name != "global":
             return self._allocate_local(local_name, var_type)
 
         if var_type == AllocCategory.CONSTANT:
@@ -160,3 +164,39 @@ class MemoryManager:
                 raise ValueError(f"Invalid constant type: {type(constant)}")
         else:
             raise ValueError(f"Invalid address: {address}")
+        
+    def to_string(self) -> str:
+        """Return a string representation of the memory manager state for debugging."""
+        result: List[str] = []
+        
+        # Address ranges
+        result.append("\nAddress Ranges:")
+        for category, range_info in self.address_ranges.items():
+            result.append(f"  {category.name}: {range_info.start}-{range_info.end} (current: {range_info.current})")
+        
+        # Local allocations
+        if self.size_per_local:
+            result.append("\nLocal Allocations:")
+            for local_name, allocations in self.size_per_local.items():
+                result.append(f"  {local_name}:")
+                for var_type, count in allocations.items():
+                    result.append(f"    {var_type.name}: {count} variables")
+        
+        # Constants
+        result.append("\nConstants:")
+        if self.constants_int:
+            result.append("  Integers:")
+            for value, addr in self.constants_int.items():
+                result.append(f"    {value} -> {addr}")
+        
+        if self.constants_float:
+            result.append("  Floats:")
+            for value, addr in self.constants_float.items():
+                result.append(f"    {value} -> {addr}")
+        
+        if self.constants_string:
+            result.append("  Strings:")
+            for value, addr in self.constants_string.items():
+                result.append(f"    '{value}' -> {addr}")
+        
+        return "\n".join(result)

@@ -3,8 +3,6 @@ from SemanticCube import SemanticCube
 from node_dataclasses import *
 from SymbolTable import SymbolTable
 from MemoryManager import AllocCategory, Operations, MemoryManager
-from FunctionTable import FunctionTable
-# from lark import Tree
 
 class BabyInterpreter:
     def __init__(self, symbol_table: SymbolTable, memory_manager: MemoryManager):
@@ -13,7 +11,6 @@ class BabyInterpreter:
         self.semantic_cube = SemanticCube()
         self.quads: List[Quad] = []
         self.memory_manager = memory_manager
-        self.function_table = FunctionTable(memory_manager=memory_manager)
 
     def add_quad(
             self, 
@@ -39,7 +36,7 @@ class BabyInterpreter:
             right_vdir = self.evaluate_expression(current_tree_node.right_expr)
     
             op = current_tree_node.op
-            alloc_vdir = self.memory_manager.allocate(AllocCategory.TEMP_INT)
+            alloc_vdir = self.memory_manager.allocate(AllocCategory.TEMP_INT, local_name=self.current_scope)
             quad = self.add_quad(op=op, vdir1=left_vdir, vdir2=right_vdir, storage_vdir=alloc_vdir)
             assert quad.storage_vdir is not None, "Quadruple storage_vdir should not be None"
             return quad.storage_vdir
@@ -59,6 +56,7 @@ class BabyInterpreter:
 
                 storage_vdir = self.memory_manager.allocate(
                     AllocCategory.TEMP_INT if result_type == "int" else AllocCategory.TEMP_FLOAT,
+                    local_name=self.current_scope
                 )
                 quad = self.add_quad(
                     op=op, 
@@ -83,6 +81,7 @@ class BabyInterpreter:
 
                 storage_vdir = self.memory_manager.allocate(
                     AllocCategory.TEMP_INT if result_type == "int" else AllocCategory.TEMP_FLOAT,
+                    local_name=self.current_scope
                 )
                 quad = self.add_quad(
                     op=op, 
@@ -111,7 +110,11 @@ class BabyInterpreter:
                 else:
                     value = current_tree_node.value
                     
-                vdir = self.memory_manager.allocate(AllocCategory.CONSTANT, const_value=value)
+                vdir = self.memory_manager.allocate(
+                    AllocCategory.CONSTANT, 
+                    const_value=value, 
+                    local_name=self.current_scope
+                )
                 return vdir
                 
             elif isinstance(current_tree_node.value, Expression):
@@ -179,17 +182,15 @@ class BabyInterpreter:
                 scope_name=self.current_scope,
                 value=None
             )
-            # self.add_quad(op=Operations.ASSIGN, vdir1=vdir)
 
     def gen_quads_function(self, ir: Function): 
         self.current_scope = ir.id
-        self.symbol_table.add_function(name=ir.id, params=ir.params, body=ir.body)
-        self.function_table.add_function(ir, start_quad=len(self.quads))
+        self.symbol_table.add_function(name=ir.id, params=ir.params, body=ir.body, starting_quad=len(self.quads))
+        
         if ir.vars is not None: 
             self.gen_quads_vars(ir.vars)
         self.gen_quads_body(ir.body)
         
-        self.function_table.update_allocation_tracker(name=ir.id)
         self.current_scope = "global"
         self.add_quad(op=Operations.ENDFUNC)
 
@@ -211,13 +212,16 @@ class BabyInterpreter:
     def gen_quads_print(self, ir: Print): 
         for content in ir.contents:
             if isinstance(content, str):
-                allocated_const = self.memory_manager.allocate(AllocCategory.CONSTANT, const_value=content)
+                allocated_const = self.memory_manager.allocate(
+                    var_type=AllocCategory.CONSTANT, 
+                    const_value=content, 
+                    local_name=self.current_scope
+                )
                 self.add_quad(op=Operations.PRINT, vdir1=allocated_const)
             else:
                 # Evaluate the expression and print its value
                 expr_vdir = self.evaluate_expression(content)
                 self.add_quad(op=Operations.PRINT, vdir1=expr_vdir)
-        print()  # New line after printing all contents
 
     def gen_quads_condition(self, ir: Condition): 
         expr_vdir = self.evaluate_expression(ir.expr)
@@ -261,12 +265,10 @@ class BabyInterpreter:
     def gen_quads_f_call(self, ir: FCall): 
         self.current_scope = ir.id
 
-        function_register = self.function_table.get_function(ir.id)
-        if function_register is None:
-            raise ValueError(f"Function {ir.id} is not declared.")
+        scope = self.symbol_table.get_scope(ir.id)  # Ensure the function scope exists
 
-        if len(ir.args) != len(function_register.param_types):
-            raise ValueError(f"Function {ir.id} expects {len(function_register.param_types)} arguments, got {len(ir.args)}.")
+        if (len(ir.args) != len(scope.param_list)):
+            raise ValueError(f"Function {ir.id} expects {len(scope.param_list)} arguments, got {len(ir.args)}.")
 
         self.add_quad(op=Operations.ALLOC, label=ir.id)
         
@@ -274,7 +276,7 @@ class BabyInterpreter:
             expr_vdir = self.evaluate_expression(arg)
             expr_type = self.memory_manager.get_address_type(expr_vdir)
 
-            param_type = function_register.param_types[i]
+            param_type = scope.param_list[i].data_type
             if not self.semantic_cube.is_decl_valid(from_type=expr_type, to_type=param_type):
                 raise ValueError(f"Invalid argument type: {expr_type} cannot be passed to function {ir.id}.")
             
@@ -284,18 +286,17 @@ class BabyInterpreter:
                 operation=Operations.ASSIGN
             )
 
-            print(f"Converting {expr_type} to {new_type}")
             if expr_type != new_type:
                 # Convert the expression to the expected type
                 prev_vdir = expr_vdir
                 if new_type == "int":
-                    expr_vdir = self.memory_manager.allocate(AllocCategory.TEMP_INT)
+                    expr_vdir = self.memory_manager.allocate(AllocCategory.TEMP_INT, local_name=self.current_scope)
                 elif new_type == "float":
-                    expr_vdir = self.memory_manager.allocate(AllocCategory.TEMP_FLOAT)
+                    expr_vdir = self.memory_manager.allocate(AllocCategory.TEMP_FLOAT, local_name=self.current_scope)
                 self.add_quad(op=Operations.ASSIGN, vdir1=prev_vdir, storage_vdir=expr_vdir)
 
             self.add_quad(op=Operations.PARAM, vdir1=expr_vdir)
-        # Check if function is declared
         
+        self.add_quad(op=Operations.GOSUB, vdir1=scope.starting_quad)
             
         self.current_scope = "global"

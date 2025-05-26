@@ -14,14 +14,13 @@ class Symbol:
     param_index: Optional[int] = None
 
 class Scope:
-    def __init__(self, name: str, memory_manager: MemoryManager, body=None):
+    def __init__(self, name: str, starting_quad: int, body: Optional[Body] = None):
         self.name = name
         self.symbols: Dict[str, Symbol] = {}
         self.symbols_by_vdir: Dict[int, Symbol]= {}
         self.param_list: List[Symbol] = []
-        self.body: Optional[Body]= body
-        self.memory_manager = memory_manager
-        self.current_local_vdir = 0
+        self.body: Optional[Body] = body
+        self.starting_quad: int = starting_quad
 
     def add_symbol(self, symbol: Symbol) -> None:
         """Add any symbol to the scope."""
@@ -38,7 +37,7 @@ class Scope:
 class SymbolTable:
     def __init__(self, memory_manager: MemoryManager):
         self.scopes: Dict[str, Scope] = {}
-        self.add_scope(Scope(name="global", memory_manager=memory_manager, body=None))
+        self.add_scope(Scope(name="global", starting_quad=0, body=None))
         self.memory_manager = memory_manager
 
     def _allocate_vdir(self, data_type: str, scope_name: str) -> int:
@@ -53,7 +52,7 @@ class SymbolTable:
             
         return self.memory_manager.allocate(var_type=category, local_name=scope_name)
 
-    def _get_scope(self, name: str) -> Scope:
+    def get_scope(self, name: str) -> Scope:
         if name not in self.scopes:
             raise ValueError(f"Scope {name} not found.")
         return self.scopes[name]    
@@ -65,13 +64,8 @@ class SymbolTable:
             identifier: Either name (str) or vdir (int)
             scope_name: Current scope to check first
         """
-        local_scope = self._get_scope(scope_name)
-        global_scope = self._get_scope("global")
-        
-        # Check parameters first
-        # for i, param in enumerate(local_scope.param_list):
-        #     if (by_name and param.name == identifier) or (not by_name and param.vdir == identifier):
-        #         return param
+        local_scope = self.get_scope(scope_name)
+        global_scope = self.get_scope("global")
         
         by_name = isinstance(identifier, str)
         # Check local and global scopes
@@ -96,7 +90,7 @@ class SymbolTable:
         self.scopes[scope.name] = scope
         
     def add_symbol(self, symbol: Symbol, scope_name: str) -> None:
-        scope = self._get_scope(scope_name)
+        scope = self.get_scope(scope_name)
         if symbol.vdir == 0:
             symbol.vdir = self._allocate_vdir(symbol.data_type, scope_name)
         scope.add_symbol(symbol)
@@ -116,11 +110,11 @@ class SymbolTable:
         symbol = Symbol(name=name, data_type=data_type, value=value, vdir=vdir, is_param=is_param, param_index=param_index)
         self.add_symbol(symbol, scope_name=scope_name)
         return symbol.vdir
-    
-    def add_function(self, name: str, params: List[Param], body) -> None:
+
+    def add_function(self, name: str, starting_quad: int, params: List[Param], body: Optional[Body] = None) -> None:
         """Add a function as a scope"""
-        self.add_scope(Scope(name, memory_manager=self.memory_manager, body=body))
-        
+        self.add_scope(Scope(name, starting_quad=starting_quad, body=body))
+
         for i, param in enumerate(params):
             self.add_symbol_by_attrs(
                 name=param.name,
@@ -131,8 +125,8 @@ class SymbolTable:
             )
 
     def is_symbol_declared(self, name: str, scope_name: str) -> bool:
-        local_scope = self._get_scope(scope_name)
-        global_scope = self._get_scope("global")
+        local_scope = self.get_scope(scope_name)
+        global_scope = self.get_scope("global")
         
         for local_param in local_scope.param_list:
             if local_param.name == name:

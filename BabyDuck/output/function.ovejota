@@ -1,0 +1,30 @@
+
+
+# BabyDuck Object File: function
+# Generated on 2025-05-26 09:24:51
+
+# Constants Table
+7000 3
+7001 4.2
+
+# Function Directory
+FUNC print_sum
+FUNC print_sum_2
+
+# Quadruples
+0 11 10
+1 1 3000 4000 6000
+2 9 6000
+3 16
+4 3 4001 4000 6000
+5 1 6000 4002 6001
+6 8 4000 6001
+7 1 3000 4000 6002
+8 9 6002
+9 16
+10 8 1000 7000
+11 13 -> print_sum
+12 14 1000
+13 14 7001
+14 12
+Successfully compiled function.baby to function.ovejota
