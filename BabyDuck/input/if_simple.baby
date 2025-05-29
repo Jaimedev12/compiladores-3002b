@@ -2,7 +2,7 @@ program if_simple;
 var x: int;
 
 main {
-    x = 3;
+    x = 1;
 
     if (x < 2) {
         print("Menor");

@@ -1,8 +1,10 @@
+from typing import cast, List
 from lark import Transformer, v_args
 from lark import Lark
-from util_dataclasses import Program, Vars, VarDeclaration, Function, Param, Assign, Print, Condition, Cycle, Body, FCall, Expression, Exp, Term, Factor, Statement
-from typing import cast, List, Any
-from MemoryManager import Operations
+
+from custom_classes.tree_nodes import *
+from custom_classes.memory import Operations
+
 
 @v_args(inline=True)
 class BabyTransformer(Transformer):

@@ -1,28 +1,28 @@
 program function;
-var x: int;
+var x: float;
 
-void print_sum(num1: int, num2: float) [
+void print_sum(num1: int, num2: int) [
     var a, b, c, d: int;
     {
         print(num1 + num2);
     }
 ];
 
-void print_sum_2(num1: int, num2: int) [
+void print_sum_2(num: int) [
     var a, b, c, d: float;
     {
         b = 2;
         c = 4.3;
         a = 10;
         a = b * a + c;
-        print(num1 + a);
+        print(num + a);
     }
 ];
 
 main {
-    x = 3;
+    x = 3.7;
     print_sum(x, 4.2);
-    print_sum_2(7.1, 2);
+    print_sum_2(7.5);
 }
 
 end

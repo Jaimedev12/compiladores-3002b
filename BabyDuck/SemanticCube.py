@@ -1,6 +1,7 @@
-from util_dataclasses import VariableType, ValueType
-from MemoryManager import *
 from typing import Dict
+
+from custom_classes.values import VariableType, ValueType
+from custom_classes.memory import Operations
 
 class SemanticCube:
     def __init__(self):

@@ -1,7 +1,10 @@
 from typing import Union, Optional, Any, List, Dict
-from dataclasses import dataclass
-from util_dataclasses import Param, Body, VariableType, AllocCategory, Symbol
 from MemoryManager import MemoryManager
+
+from custom_classes.values import VariableType
+from custom_classes.memory import AllocCategory
+from custom_classes.classes import Symbol
+from custom_classes.tree_nodes import Param, Body
 
 
 class Scope:

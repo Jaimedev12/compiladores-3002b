@@ -2,7 +2,7 @@ program fibonacci;
 var currFib, n, prev, prevprev, res: int;
 
 main {
-    n = 10;
+    n = 15;
     currFib = 1;
     prev = 1;
     prevprev = 1;

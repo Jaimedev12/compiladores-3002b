@@ -1,37 +1,10 @@
 import sys
-import pickle
-from typing import Dict, List, Any, Optional, Union, Tuple, Callable
-from dataclasses import dataclass
-from enum import Enum
+from typing import Dict, List, Any, Optional, Tuple, Callable
 
-from util_dataclasses import Quad, AllocCategory, Operations, ConstantValue
-from MemoryManager import MemoryManager
+from custom_classes.memory import AllocCategory, Operations
+from custom_classes.classes import Quad
+
 from read_obj import read_obj_file, ObjData
-
-class MemorySegment(Enum):
-    GLOBAL_INT = (1000, 1999)
-    GLOBAL_FLOAT = (2000, 2999)
-    LOCAL_INT = (3000, 3999)
-    LOCAL_FLOAT = (4000, 4999)
-    TEMP_INT = (5000, 5999)
-    TEMP_FLOAT = (6000, 6999)
-    CONSTANT = (7000, 7999)
-    
-    @classmethod
-    def get_segment_by_address(cls, address: int) -> 'MemorySegment':
-        for segment in cls:
-            if segment.value[0] <= address <= segment.value[1]:
-                return segment
-        raise ValueError(f"Invalid memory address: {address}")
-    
-    @property
-    def is_local(self) -> bool:
-        return self in (MemorySegment.LOCAL_INT, MemorySegment.LOCAL_FLOAT, 
-                       MemorySegment.TEMP_INT, MemorySegment.TEMP_FLOAT)
-    
-    @property
-    def is_float(self) -> bool:
-        return self in (MemorySegment.GLOBAL_FLOAT, MemorySegment.LOCAL_FLOAT, MemorySegment.TEMP_FLOAT)
 
 class ActivationRecord:
     """Represents a function call's memory context"""
@@ -81,28 +54,28 @@ class BabyVirtualMachine:
             raise ValueError("Cannot access memory with None address")
 
         try:
-            segment = MemorySegment.get_segment_by_address(address)
-            
-            if segment == MemorySegment.CONSTANT:
+            category = AllocCategory.get_category_from_address(address)
+
+            if category == AllocCategory.CONSTANT:
                 if address in self.constants:
                     return self.constants[address]
                 raise ValueError(f"Undefined constant at address {address}")
-            
-            if segment.is_local:
+
+            if category.is_local:
                 if not self.call_stack:
-                    raise ValueError(f"No active function context for {segment.name} memory")
-                
+                    raise ValueError(f"No active function context for {category.name} memory")
+
                 ar = self.call_stack[-1]
-                memory = ar.temp_memory if segment in (MemorySegment.TEMP_INT, MemorySegment.TEMP_FLOAT) else ar.local_memory
+                memory = ar.temp_memory if category in (AllocCategory.TEMP_INT, AllocCategory.TEMP_FLOAT) else ar.local_memory
                 
                 if address in memory:
                     return memory[address]
-                raise ValueError(f"Undefined variable at address {address} in {segment.name}")
+                raise ValueError(f"Undefined variable at address {address} in {category.name}")
             
             else:
                 if address in self.global_memory:
                     return self.global_memory[address]
-                raise ValueError(f"Undefined variable at address {address} in {segment.name}")
+                raise ValueError(f"Undefined variable at address {address} in {category.name}")
                 
         except ValueError as e:
             raise ValueError(f"Memory access error: {str(e)}")
@@ -113,19 +86,19 @@ class BabyVirtualMachine:
             raise ValueError("Cannot write to memory with None address")
         
         try:
-            segment = MemorySegment.get_segment_by_address(address)
+            category = AllocCategory.get_category_from_address(address)
             
-            if segment == MemorySegment.CONSTANT:
+            if category == AllocCategory.CONSTANT:
                 raise ValueError(f"Cannot modify constant at address {address}")
             
-            value_to_store = float(value) if segment.is_float else int(value)
+            value_to_store = float(value) if category.is_float else int(value)
             
-            if segment.is_local:
+            if category.is_local:
                 if not self.call_stack:
-                    raise ValueError(f"No active function context for {segment.name} memory")
+                    raise ValueError(f"No active function context for {category.name} memory")
                 
                 ar = self.call_stack[-1]
-                if segment in (MemorySegment.TEMP_INT, MemorySegment.TEMP_FLOAT):
+                if category in (AllocCategory.TEMP_INT, AllocCategory.TEMP_FLOAT):
                     ar.temp_memory[address] = value_to_store
                 else:
                     ar.local_memory[address] = value_to_store

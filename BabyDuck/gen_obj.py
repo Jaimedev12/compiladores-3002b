@@ -8,9 +8,12 @@ from lark import Lark
 from BabyTransformer import BabyTransformer
 from BabyInterpreter import BabyInterpreter
 from SymbolTable import SymbolTable, Scope
-from MemoryManager import MemoryManager, Operations, AllocCategory
+from MemoryManager import MemoryManager
 from typing import Dict, List
-from util_dataclasses import ConstantValue, Quad
+
+from custom_classes.values import ConstantValue
+from custom_classes.memory import Operations, AllocCategory
+from custom_classes.classes import Quad
 
     
 @dataclass

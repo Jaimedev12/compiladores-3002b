@@ -1,10 +1,10 @@
 # BabyDuck Object File: recursion
-# Generated on 2025-05-29 11:29:17
+# Generated on 2025-05-29 12:45:36
 
 # Constants Table
 7000 0
 7001 1
-7002 599
+7002 15
 
 # Function Directory
 Scope: global
@@ -37,6 +37,6 @@ Scope: print_num
 <7> PRINT num
 <8> ENDFUNC
 <9> ALLOC -> print_num
-<10> PARAM 599
+<10> PARAM 15
 <11> GOSUB 1 -> print_num
 <12> END

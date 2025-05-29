@@ -1,8 +1,8 @@
 # BabyDuck Object File: if_simple
-# Generated on 2025-05-28 18:55:11
+# Generated on 2025-05-29 12:46:01
 
 # Constants Table
-7000 3
+7000 1
 7001 2
 7002 'Menor'
 7003 'Mayor'
@@ -22,7 +22,7 @@ Scope: global
 <7> 12 None None None
 --------
 <0> GOTO 1
-<1> ASSIGN x 3
+<1> ASSIGN x 1
 <2> LESS_THAN x 2 ti0
 <3> GOTOF ti0 6
 <4> PRINT Menor

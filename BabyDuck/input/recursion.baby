@@ -10,7 +10,7 @@ void print_num(num: int)[
 ];
 
 main {
-    print_num(599);
+    print_num(15);
 }
 
 end

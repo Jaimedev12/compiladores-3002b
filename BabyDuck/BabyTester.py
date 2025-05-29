@@ -7,7 +7,8 @@ from BabyTransformer import BabyTransformer
 from BabyInterpreter import BabyInterpreter
 from SymbolTable import SymbolTable
 from MemoryManager import MemoryManager
-from util_dataclasses import Operations, AllocCategory
+
+from custom_classes.memory import Operations, AllocCategory
 
 logger.setLevel(logging.DEBUG)
 

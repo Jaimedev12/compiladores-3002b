@@ -1,8 +1,12 @@
 from typing import List, Optional
+
+from custom_classes.tree_nodes import *
+from custom_classes.memory import Operations, AllocCategory
+from custom_classes.classes import Quad
+
 from SemanticCube import SemanticCube
-from util_dataclasses import *
 from SymbolTable import SymbolTable
-from MemoryManager import AllocCategory, Operations, MemoryManager
+from MemoryManager import MemoryManager
 
 class BabyInterpreter:
     def __init__(self, symbol_table: SymbolTable, memory_manager: MemoryManager):
