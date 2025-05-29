@@ -55,31 +55,17 @@ class MemoryManager:
         self.address_ranges[AllocCategory.CONSTANT].current += 1
         return address
 
-
     def allocate(
             self, 
             var_type: AllocCategory, 
             local_name: str, 
             const_value: Optional[ConstantValue] = None
             ) -> int:
-        if (var_type == AllocCategory.LOCAL_INT or \
-            var_type == AllocCategory.LOCAL_FLOAT or \
-            var_type == AllocCategory.TEMP_INT or \
-            var_type == AllocCategory.TEMP_FLOAT) and local_name != "global":
-            return self._allocate_local(local_name, var_type)
-
+        
         if var_type == AllocCategory.CONSTANT:
             return self._allocate_constant(const_value)
-        if var_type not in self.address_ranges:
-            raise ValueError(f"Invalid variable type: {var_type}")
-
-        range_info = self.address_ranges[var_type]
-        if range_info.current > range_info.end:
-            raise OverflowError(f"No more memory in {var_type.name} range")
-
-        address = range_info.current
-        range_info.current += 1
-        return address
+        else :
+            return self._allocate_local(local_name, var_type)
     
     def get_address_type(self, address: int) -> Union[Literal["int"], Literal["float"], Literal["str"]]:
 
@@ -118,9 +104,9 @@ class MemoryManager:
         result: List[str] = []
         
         # Address ranges
-        result.append("\nAddress Ranges:")
+        result.append("Address Ranges:")
         for category, range_info in self.address_ranges.items():
-            result.append(f"  {category.name}: {range_info.start}-{range_info.end} (current: {range_info.current})")
+            result.append(f"  {category.name}: {range_info.start}-{range_info.end}")
         
         # Local allocations
         if self.size_per_local:
@@ -146,5 +132,7 @@ class MemoryManager:
             result.append("  Strings:")
             for value, addr in self.constants_string.items():
                 result.append(f"    '{value}' -> {addr}")
-        
+
+        result.append("\n")
+
         return "\n".join(result)

@@ -1,5 +1,5 @@
 # BabyDuck Object File: recursion
-# Generated on 2025-05-29 12:45:36
+# Generated on 2025-05-29 14:03:46
 
 # Constants Table
 7000 0
@@ -11,6 +11,28 @@ Scope: global
 Scope: print_num
   num - 3000: int = None
   Param: num - 3000: int = None
+
+# Memory Manager
+Address Ranges:
+  GLOBAL_INT: 1000-1999
+  GLOBAL_FLOAT: 2000-2999
+  LOCAL_INT: 3000-3999
+  LOCAL_FLOAT: 4000-4999
+  TEMP_INT: 5000-5999
+  TEMP_FLOAT: 6000-6999
+  CONSTANT: 7000-7999
+
+Local Allocations:
+  print_num:
+    LOCAL_INT: 1 variables
+    TEMP_INT: 2 variables
+
+Constants:
+  Integers:
+    0 -> 7000
+    1 -> 7001
+    15 -> 7002
+
 
 # Quadruples
 <0> 11 9 None None

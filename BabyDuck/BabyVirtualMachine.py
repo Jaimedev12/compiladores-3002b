@@ -1,28 +1,101 @@
 import sys
 from typing import Dict, List, Any, Optional, Tuple, Callable
 
-from custom_classes.memory import AllocCategory, Operations
+from custom_classes.memory import AllocCategory, Operations, DATA_RANGES
 from custom_classes.classes import Quad
+from SymbolTable import Scope
 
 from read_obj import read_obj_file, ObjData
 
 class ActivationRecord:
     """Represents a function call's memory context"""
-    def __init__(self, function_name: str, return_address: int):
-        self.function_name = function_name
+    def __init__(self, scope: Scope, return_address: int, variable_sizes: Dict[AllocCategory, int]):
+        self.scope = scope.name
         self.return_address = return_address
-        self.local_memory = {}
-        self.temp_memory = {}
+
+        self.local_int_values: List[int] = [0]
+        self.local_float_values: List[float] = [0.0]
+
+        self.local_int_values: List[int] = [0]
+        self.local_float_values: List[float] = [0.0]
+        self.temp_int_values: List[int] = [0]
+        self.temp_float_values: List[float] = [0.0]
+
+        if (AllocCategory.GLOBAL_INT in variable_sizes) :
+            self.local_int_values: List[int] = [0] * variable_sizes[AllocCategory.GLOBAL_INT]
+        if (AllocCategory.GLOBAL_FLOAT in variable_sizes):
+            self.local_float_values: List[float] = [0.0] * variable_sizes[AllocCategory.GLOBAL_FLOAT]
+        if (AllocCategory.TEMP_INT in variable_sizes):
+            self.temp_int_values: List[int] = [0] * variable_sizes[AllocCategory.TEMP_INT]
+        if (AllocCategory.TEMP_FLOAT in variable_sizes):
+            self.temp_float_values: List[float] = [0.0] * variable_sizes[AllocCategory.TEMP_FLOAT]
+        if (AllocCategory.LOCAL_INT in variable_sizes):
+            self.local_int_values: List[int] = [0] * variable_sizes[AllocCategory.LOCAL_INT]
+        if (AllocCategory.LOCAL_FLOAT in variable_sizes):
+            self.local_float_values: List[float] = [0.0] * variable_sizes[AllocCategory.LOCAL_FLOAT]
+
+        # self.local_memory = {}
+        # self.temp_memory = {}
         self.parameters = []
+    
+
+    def get_value(self, address: int) -> Any:
+        """Get a value from the local or temporary memory"""
+
+        if address <= DATA_RANGES[AllocCategory.LOCAL_INT].end and \
+            address >= DATA_RANGES[AllocCategory.LOCAL_INT].start:
+            return self.local_int_values[address - DATA_RANGES[AllocCategory.LOCAL_INT].start]
+        elif address <= DATA_RANGES[AllocCategory.LOCAL_FLOAT].end and \
+            address >= DATA_RANGES[AllocCategory.LOCAL_FLOAT].start:
+            return self.local_float_values[address - DATA_RANGES[AllocCategory.LOCAL_FLOAT].start]
+        elif address <= DATA_RANGES[AllocCategory.TEMP_INT].end and \
+            address >= DATA_RANGES[AllocCategory.TEMP_INT].start:
+            return self.temp_int_values[address - DATA_RANGES[AllocCategory.TEMP_INT].start]
+        elif address <= DATA_RANGES[AllocCategory.TEMP_FLOAT].end and \
+            address >= DATA_RANGES[AllocCategory.TEMP_FLOAT].start:
+            return self.temp_float_values[address - DATA_RANGES[AllocCategory.TEMP_FLOAT].start]
+        elif address <= DATA_RANGES[AllocCategory.GLOBAL_INT].end and \
+            address >= DATA_RANGES[AllocCategory.GLOBAL_INT].start:
+            return self.local_int_values[address - DATA_RANGES[AllocCategory.GLOBAL_INT].start]
+        elif address <= DATA_RANGES[AllocCategory.GLOBAL_FLOAT].end and \
+            address >= DATA_RANGES[AllocCategory.GLOBAL_FLOAT].start:
+            return self.local_float_values[address - DATA_RANGES[AllocCategory.GLOBAL_FLOAT].start]
+        else:
+            raise ValueError(f"Address {address} not found in activation record {self.scope}")
+        
+    def set_value(self, address: int, value: Any) -> None:
+        """Set a value in the local or temporary memory"""
+        if address <= DATA_RANGES[AllocCategory.LOCAL_INT].end and \
+            address >= DATA_RANGES[AllocCategory.LOCAL_INT].start:
+            self.local_int_values[address - DATA_RANGES[AllocCategory.LOCAL_INT].start] = value
+        elif address <= DATA_RANGES[AllocCategory.LOCAL_FLOAT].end and \
+            address >= DATA_RANGES[AllocCategory.LOCAL_FLOAT].start:
+            self.local_float_values[address - DATA_RANGES[AllocCategory.LOCAL_FLOAT].start] = value
+        elif address <= DATA_RANGES[AllocCategory.TEMP_INT].end and \
+            address >= DATA_RANGES[AllocCategory.TEMP_INT].start:
+            self.temp_int_values[address - DATA_RANGES[AllocCategory.TEMP_INT].start] = value
+        elif address <= DATA_RANGES[AllocCategory.TEMP_FLOAT].end and \
+            address >= DATA_RANGES[AllocCategory.TEMP_FLOAT].start:
+            self.temp_float_values[address - DATA_RANGES[AllocCategory.TEMP_FLOAT].start] = value
+        elif address <= DATA_RANGES[AllocCategory.GLOBAL_INT].end and \
+            address >= DATA_RANGES[AllocCategory.GLOBAL_INT].start:
+            self.local_int_values[address - DATA_RANGES[AllocCategory.GLOBAL_INT].start] = value
+        elif address <= DATA_RANGES[AllocCategory.GLOBAL_FLOAT].end and \
+            address >= DATA_RANGES[AllocCategory.GLOBAL_FLOAT].start:
+            self.local_float_values[address - DATA_RANGES[AllocCategory.GLOBAL_FLOAT].start] = value
+        else:
+            raise ValueError(f"Address {address} not found in activation record {self.scope}")
+
 
 class BabyVirtualMachine:
     def __init__(self, obj_data: ObjData):
-        self.obj_data = obj_data
+        self.metadata = obj_data.metadata
         self.quads = obj_data.quads
         self.constants = obj_data.constants
         self.functions = obj_data.functions
+        self.size_per_local = obj_data.size_per_local
         
-        self.global_memory: Dict[int, Any] = {}
+        # self.global_memory: Dict[int, Any] = {}
         self.call_stack: List[ActivationRecord] = []
         
         self.instruction_pointer = 0
@@ -45,8 +118,14 @@ class BabyVirtualMachine:
             Operations.GOSUB.value: self._op_gosub,
             Operations.ENDFUNC.value: self._op_endfunc
         }
-        
-        self.call_stack.append(ActivationRecord("global", -1))
+
+        self.call_stack.append(
+            ActivationRecord(
+                obj_data.functions["global"], 
+                -1, 
+                variable_sizes=self.size_per_local["global"]
+            )
+        )
 
     def get_memory_value(self, address: Optional[int]) -> Any:
         """Get a value from the appropriate memory segment"""
@@ -61,21 +140,11 @@ class BabyVirtualMachine:
                     return self.constants[address]
                 raise ValueError(f"Undefined constant at address {address}")
 
-            if category.is_local:
-                if not self.call_stack:
-                    raise ValueError(f"No active function context for {category.name} memory")
+            if not self.call_stack:
+                raise ValueError(f"No active function context for {category.name} memory")
 
-                ar = self.call_stack[-1]
-                memory = ar.temp_memory if category in (AllocCategory.TEMP_INT, AllocCategory.TEMP_FLOAT) else ar.local_memory
-                
-                if address in memory:
-                    return memory[address]
-                raise ValueError(f"Undefined variable at address {address} in {category.name}")
-            
-            else:
-                if address in self.global_memory:
-                    return self.global_memory[address]
-                raise ValueError(f"Undefined variable at address {address} in {category.name}")
+            ar = self.call_stack[-1]
+            return ar.get_value(address)
                 
         except ValueError as e:
             raise ValueError(f"Memory access error: {str(e)}")
@@ -93,18 +162,11 @@ class BabyVirtualMachine:
             
             value_to_store = float(value) if category.is_float else int(value)
             
-            if category.is_local:
-                if not self.call_stack:
-                    raise ValueError(f"No active function context for {category.name} memory")
-                
-                ar = self.call_stack[-1]
-                if category in (AllocCategory.TEMP_INT, AllocCategory.TEMP_FLOAT):
-                    ar.temp_memory[address] = value_to_store
-                else:
-                    ar.local_memory[address] = value_to_store
-                    
-            else:
-                self.global_memory[address] = value_to_store
+            if not self.call_stack:
+                raise ValueError(f"No active function context for {category.name} memory")
+
+            ar = self.call_stack[-1]
+            ar.set_value(address, value_to_store)
                 
         except ValueError as e:
             raise ValueError(f"Memory write error: {str(e)}")
@@ -216,14 +278,19 @@ class BabyVirtualMachine:
             raise ValueError(f"Function '{function_name}' not defined")
         function_scope = self.functions[function_name]
         
-        ar = ActivationRecord(function_name, self.instruction_pointer + 1)
+        ar = ActivationRecord(
+            self.functions[function_name], 
+            self.instruction_pointer + 1,
+            variable_sizes=self.size_per_local[function_name]
+        )
         
         current_params = self.call_stack[-1].parameters
         self.call_stack[-1].parameters = []
         
         for i, param in enumerate(function_scope.param_list):
             if i < len(current_params):
-                ar.local_memory[param.vdir] = current_params[i]
+                ar.set_value(param.vdir, current_params[i])
+                # ar.local_memory[param.vdir] = current_params[i]
         
         self.call_stack.append(ar)
         assert quad.vdir1 is not None, "GOSUB requires a valid vdir1"

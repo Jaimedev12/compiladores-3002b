@@ -36,7 +36,7 @@ if __name__ == "__main__":
         sys.exit(1)
     
     input_path = "./input"
-    # filename = "recursion"
+    # filename = "fibonacci"
     filename = sys.argv[1]
     input_file = os.path.join(input_path, filename)
 

@@ -1,5 +1,5 @@
 # BabyDuck Object File: fibonacci
-# Generated on 2025-05-29 12:48:11
+# Generated on 2025-05-29 14:03:38
 
 # Constants Table
 7000 15
@@ -13,6 +13,28 @@ Scope: global
   prev - 1002: int = None
   prevprev - 1003: int = None
   res - 1004: int = None
+
+# Memory Manager
+Address Ranges:
+  GLOBAL_INT: 1000-1999
+  GLOBAL_FLOAT: 2000-2999
+  LOCAL_INT: 3000-3999
+  LOCAL_FLOAT: 4000-4999
+  TEMP_INT: 5000-5999
+  TEMP_FLOAT: 6000-6999
+  CONSTANT: 7000-7999
+
+Local Allocations:
+  global:
+    GLOBAL_INT: 5 variables
+    TEMP_INT: 5 variables
+
+Constants:
+  Integers:
+    15 -> 7000
+    1 -> 7001
+    3 -> 7002
+
 
 # Quadruples
 <0> 11 1 None None

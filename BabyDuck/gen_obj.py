@@ -26,6 +26,7 @@ class ObjData:
     metadata: ObjectFileMetadata
     constants: Dict[int, ConstantValue]
     functions: Dict[str, Scope]
+    size_per_local: Dict[str, Dict[AllocCategory, int]]
     quads: List[Quad]
 
 
@@ -95,6 +96,10 @@ def gen_obj(file_path: str, filename: str, output_path: str = "./output") -> Non
                 output_file.write("# Function Directory\n")
                 output_file.write(symbol_table.to_string())
                 output_file.write("\n")
+
+                output_file.write("# Memory Manager\n")
+                output_file.write(symbol_table.memory_manager.to_string())
+                output_file.write("\n")
                 
                 output_file.write("# Quadruples\n")
                 for i, quad in enumerate(baby_interpreter.quads):
@@ -134,7 +139,8 @@ def gen_obj(file_path: str, filename: str, output_path: str = "./output") -> Non
                         ),
                         constants=memory_manager.constants,
                         functions=symbol_table.scopes,
-                        quads=baby_interpreter.quads
+                        quads=baby_interpreter.quads,
+                        size_per_local=symbol_table.memory_manager.size_per_local
                     )
                     pickle.dump(obj_data, binary_output)
 
