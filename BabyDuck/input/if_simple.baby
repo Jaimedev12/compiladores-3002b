@@ -1,0 +1,15 @@
+program function;
+var x: int;
+
+main {
+    x = 3;
+
+    if (x < 2) {
+        print("Menor");
+    } else {
+        print("Mayor");
+    };
+}
+
+end
+

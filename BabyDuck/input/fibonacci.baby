@@ -1,0 +1,24 @@
+program function;
+var currFib, n, prev, prevprev, res: int;
+
+main {
+    n = 10;
+    currFib = 1;
+    prev = 1;
+    prevprev = 1;
+
+    while (currFib < n+1) do {
+        if (currFib < 3) {
+            print(1);
+        } else {
+            res = prev + prevprev;
+            print(res);
+            prevprev = prev;
+            prev = res;
+        };
+        currFib = currFib + 1;
+    };
+}
+
+end
+

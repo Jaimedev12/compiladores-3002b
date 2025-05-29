@@ -237,11 +237,12 @@ class BabyInterpreter:
         if ir.else_body is not None:
             self.add_quad(op=Operations.GOTO, vdir1=-1)
             goto_quad_pos = len(self.quads) - 1
+            self.quads[gotof_pos].vdir2 = len(self.quads)            
 
             self.gen_quads_body(ir.else_body)
             self.quads[goto_quad_pos].vdir1 = len(self.quads)
-        
-        self.quads[gotof_pos].vdir2 = len(self.quads)
+        else:
+            self.quads[gotof_pos].vdir2 = len(self.quads)
 
     def gen_quads_cycle(self, ir: Cycle): 
         quad_pos_bef_eval = len(self.quads)

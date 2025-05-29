@@ -1,0 +1,60 @@
+# BabyDuck Object File: fibonacci
+# Generated on 2025-05-28 18:55:37
+
+# Constants Table
+7000 10
+7001 1
+7002 3
+
+# Function Directory
+Scope: global
+  currFib - 1000: int = None
+  n - 1001: int = None
+  prev - 1002: int = None
+  prevprev - 1003: int = None
+  res - 1004: int = None
+
+# Quadruples
+<0> 11 1 None None
+<1> 8 1001 7000 None
+<2> 8 1000 7001 None
+<3> 8 1002 7001 None
+<4> 8 1003 7001 None
+<5> 1 1001 7001 5000
+<6> 5 1000 5000 5001
+<7> 10 5001 20 None
+<8> 5 1000 7002 5002
+<9> 10 5002 12 None
+<10> 9 7001 None None
+<11> 11 17 None None
+<12> 1 1002 1003 5003
+<13> 8 1004 5003 None
+<14> 9 1004 None None
+<15> 8 1003 1002 None
+<16> 8 1002 1004 None
+<17> 1 1000 7001 5004
+<18> 8 1000 5004 None
+<19> 11 5 None None
+<20> 12 None None None
+--------
+<0> GOTO 1
+<1> ASSIGN n 10
+<2> ASSIGN currFib 1
+<3> ASSIGN prev 1
+<4> ASSIGN prevprev 1
+<5> PLUS n 1 ti0
+<6> LESS_THAN currFib ti0 ti1
+<7> GOTOF ti1 20
+<8> LESS_THAN currFib 3 ti2
+<9> GOTOF ti2 12
+<10> PRINT 1
+<11> GOTO 17
+<12> PLUS prev prevprev ti3
+<13> ASSIGN res ti3
+<14> PRINT res
+<15> ASSIGN prevprev prev
+<16> ASSIGN prev res
+<17> PLUS currFib 1 ti4
+<18> ASSIGN currFib ti4
+<19> GOTO 5
+<20> END

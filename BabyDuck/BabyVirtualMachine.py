@@ -147,8 +147,8 @@ class BabyVirtualMachine:
         while self.instruction_pointer < len(self.quads):
             quad = self.quads[self.instruction_pointer]
             
-            print(f"Executing quad {self.instruction_pointer}: {quad}")
-            print(self.call_stack[-1].local_memory)
+            # print(f"Executing quad {self.instruction_pointer}: {quad}")
+            # print(self.call_stack[-1].local_memory)
 
             if quad.op_vdir in self.operations:
                 self.operations[quad.op_vdir](quad)
@@ -228,7 +228,7 @@ class BabyVirtualMachine:
         if quad.vdir1 is None:
             raise ValueError("vdir1 must be provided for print operation")
         val = self.get_memory_value(quad.vdir1)
-        print(val, end="")
+        print(val)
     
     def _op_gotof(self, quad: Quad) -> None:
         if quad.vdir1 is None or quad.vdir2 is None:

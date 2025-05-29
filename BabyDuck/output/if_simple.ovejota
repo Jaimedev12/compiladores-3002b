@@ -1,0 +1,31 @@
+# BabyDuck Object File: if_simple
+# Generated on 2025-05-28 18:55:11
+
+# Constants Table
+7000 3
+7001 2
+7002 'Menor'
+7003 'Mayor'
+
+# Function Directory
+Scope: global
+  x - 1000: int = None
+
+# Quadruples
+<0> 11 1 None None
+<1> 8 1000 7000 None
+<2> 5 1000 7001 5000
+<3> 10 5000 6 None
+<4> 9 7002 None None
+<5> 11 7 None None
+<6> 9 7003 None None
+<7> 12 None None None
+--------
+<0> GOTO 1
+<1> ASSIGN x 3
+<2> LESS_THAN x 2 ti0
+<3> GOTOF ti0 6
+<4> PRINT Menor
+<5> GOTO 7
+<6> PRINT Mayor
+<7> END

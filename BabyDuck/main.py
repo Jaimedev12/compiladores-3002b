@@ -86,12 +86,13 @@ def compile_and_run(file_path: str, filename: str):
         sys.exit(1)
 
 if __name__ == "__main__":
-    # if len(sys.argv) != 2:
-    #     print("Usage: python main.py <file.baby>")
-    #     sys.exit(1)
+    if len(sys.argv) != 2:
+        print("Usage: python main.py <file.baby>")
+        sys.exit(1)
     
     input_path = "./input"
-    filename = "function.baby"
+    # filename = "function.baby"
+    filename = sys.argv[1]
     input_file = os.path.join(input_path, filename)
     if not input_file.endswith('.baby'):
         print("File must have .baby extension")
