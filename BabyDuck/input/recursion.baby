@@ -1,0 +1,17 @@
+program recursion;
+
+void print_num(num: int)[
+    {
+        if (num > 0) {
+            print_num(num-1);
+            print(num);
+        };        
+    }
+];
+
+main {
+    print_num(599);
+}
+
+end
+

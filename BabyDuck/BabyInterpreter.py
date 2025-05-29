@@ -8,6 +8,7 @@ class BabyInterpreter:
     def __init__(self, symbol_table: SymbolTable, memory_manager: MemoryManager):
         self.symbol_table = symbol_table
         self.current_scope = "global"
+        self.scope_stack: List[str] = [self.current_scope]
         self.semantic_cube = SemanticCube()
         self.quads: List[Quad] = []
         self.memory_manager = memory_manager
@@ -185,13 +186,15 @@ class BabyInterpreter:
 
     def gen_quads_function(self, ir: Function): 
         self.current_scope = ir.id
+        self.scope_stack.append(self.current_scope)
         self.symbol_table.add_function(name=ir.id, params=ir.params, body=ir.body, starting_quad=len(self.quads))
         
         if ir.vars is not None: 
             self.gen_quads_vars(ir.vars)
         self.gen_quads_body(ir.body)
         
-        self.current_scope = "global"
+        self.scope_stack.pop()
+        self.current_scope = self.scope_stack[-1]
         self.add_quad(op=Operations.ENDFUNC)
 
     def gen_quads_assign(self, ir: Assign): 
@@ -265,6 +268,7 @@ class BabyInterpreter:
 
     def gen_quads_f_call(self, ir: FCall): 
         self.current_scope = ir.id
+        self.scope_stack.append(self.current_scope)
 
         scope = self.symbol_table.get_scope(ir.id)  # Ensure the function scope exists
 
@@ -300,4 +304,5 @@ class BabyInterpreter:
         
         self.add_quad(op=Operations.GOSUB, vdir1=scope.starting_quad, label=ir.id)
             
-        self.current_scope = "global"
+        self.scope_stack.pop()
+        self.current_scope = self.scope_stack[-1]

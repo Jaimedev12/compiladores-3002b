@@ -1,0 +1,42 @@
+# BabyDuck Object File: recursion
+# Generated on 2025-05-29 11:29:17
+
+# Constants Table
+7000 0
+7001 1
+7002 599
+
+# Function Directory
+Scope: global
+Scope: print_num
+  num - 3000: int = None
+  Param: num - 3000: int = None
+
+# Quadruples
+<0> 11 9 None None
+<1> 6 3000 7000 5000
+<2> 10 5000 8 None
+<3> 13 None None None -> print_num
+<4> 2 3000 7001 5001
+<5> 14 5001 None None
+<6> 17 1 None None -> print_num
+<7> 9 3000 None None
+<8> 16 None None None
+<9> 13 None None None -> print_num
+<10> 14 7002 None None
+<11> 17 1 None None -> print_num
+<12> 12 None None None
+--------
+<0> GOTO 9
+<1> GREATER_THAN num 0 ti0
+<2> GOTOF ti0 8
+<3> ALLOC -> print_num
+<4> MINUS num 1 ti1
+<5> PARAM ti1
+<6> GOSUB 1 -> print_num
+<7> PRINT num
+<8> ENDFUNC
+<9> ALLOC -> print_num
+<10> PARAM 599
+<11> GOSUB 1 -> print_num
+<12> END

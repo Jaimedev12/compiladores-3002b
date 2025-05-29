@@ -1,4 +1,4 @@
-program function;
+program if_simple;
 var x: int;
 
 main {

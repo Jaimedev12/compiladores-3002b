@@ -126,7 +126,7 @@ class BabyTransformer(Transformer):
         args = cast(List[Expression], rest[1])
         return FCall(id=id, args=args)
     
-    def arguments_simple(self, expr):
+    def arguments_single(self, expr):
         return [expr]
     
     def arguments_multiple(self, first_expr, *rest):
