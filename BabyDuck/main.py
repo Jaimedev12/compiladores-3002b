@@ -1,16 +1,8 @@
 #!/usr/bin/env python3
 import os
 import sys
-import pickle
-from datetime import datetime
-
-from lark import Lark
-from BabyTransformer import BabyTransformer
-from BabyInterpreter import BabyInterpreter
-from SymbolTable import SymbolTable
-from MemoryManager import MemoryManager
 from BabyVirtualMachine import BabyVirtualMachine
-from gen_obj import ObjectFileMetadata, ObjData, gen_obj
+from gen_obj import gen_obj
 from read_obj import read_obj_file
 
 def compile_and_run(file_path: str, filename: str):
