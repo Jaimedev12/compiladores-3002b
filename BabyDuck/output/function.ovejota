@@ -1,29 +1,83 @@
 # BabyDuck Object File: function
-# Generated on 2025-05-26 10:24:46
+# Generated on 2025-05-28 18:06:07
 
 # Constants Table
-7000 3
-7001 4.2
+7000 2
+7001 4.3
+7002 10
+7003 3
+7004 4.2
+7005 7.1
 
 # Function Directory
-FUNC print_sum
-FUNC print_sum_2
+Scope: global
+  x - 1000: int = None
+Scope: print_sum
+  num1 - 3000: int = None
+  num2 - 4000: float = None
+  a - 3001: int = None
+  b - 3002: int = None
+  c - 3003: int = None
+  d - 3004: int = None
+  Param: num1 - 3000: int = None
+  Param: num2 - 4000: float = None
+Scope: print_sum_2
+  num1 - 3000: int = None
+  num2 - 3001: int = None
+  a - 4000: float = None
+  b - 4001: float = None
+  c - 4002: float = None
+  d - 4003: float = None
+  Param: num1 - 3000: int = None
+  Param: num2 - 3001: int = None
 
 # Quadruples
-0 11 10
-1 1 3000 4000 6000
-2 9 6000
-3 16
-4 3 4001 4000 6000
-5 1 6000 4002 6001
-6 8 4000 6001
-7 1 3000 4000 6002
-8 9 6002
-9 16
-10 8 1000 7000
-11 13 -> print_sum
-12 14 1000
-13 14 7001
-14 17 1
-15 12
-Successfully compiled function.baby to function.ovejota
+<0> 11 13 None None
+<1> 1 3000 4000 6000
+<2> 9 6000 None None
+<3> 16 None None None
+<4> 8 4001 7000 None
+<5> 8 4002 7001 None
+<6> 8 4000 7002 None
+<7> 3 4001 4000 6000
+<8> 1 6000 4002 6001
+<9> 8 4000 6001 None
+<10> 1 3000 4000 6002
+<11> 9 6002 None None
+<12> 16 None None None
+<13> 8 1000 7003 None
+<14> 13 None None None -> print_sum
+<15> 14 1000 None None
+<16> 14 7004 None None
+<17> 17 1 None None -> print_sum
+<18> 13 None None None -> print_sum_2
+<19> 8 5000 7005 None
+<20> 14 5000 None None
+<21> 14 7000 None None
+<22> 17 4 None None -> print_sum_2
+<23> 12 None None None
+--------
+<0> GOTO 13
+<1> PLUS num1 num2 tf0
+<2> PRINT tf0
+<3> ENDFUNC
+<4> ASSIGN b 2
+<5> ASSIGN c 4.3
+<6> ASSIGN a 10
+<7> MULT b a tf0
+<8> PLUS tf0 c tf1
+<9> ASSIGN a tf1
+<10> PLUS num1 a tf2
+<11> PRINT tf2
+<12> ENDFUNC
+<13> ASSIGN x 3
+<14> ALLOC -> print_sum
+<15> PARAM x
+<16> PARAM 4.2
+<17> GOSUB 1 -> print_sum
+<18> ALLOC -> print_sum_2
+<19> ASSIGN ti0 7.1
+<20> PARAM ti0
+<21> PARAM 2
+<22> GOSUB 4 -> print_sum_2
+<23> END

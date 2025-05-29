@@ -11,6 +11,9 @@ void print_sum(num1: int, num2: float) [
 void print_sum_2(num1: int, num2: int) [
     var a, b, c, d: float;
     {
+        b = 2;
+        c = 4.3;
+        a = 10;
         a = b * a + c;
         print(num1 + a);
     }
@@ -19,6 +22,7 @@ void print_sum_2(num1: int, num2: int) [
 main {
     x = 3;
     print_sum(x, 4.2);
+    print_sum_2(7.1, 2);
 }
 
 end

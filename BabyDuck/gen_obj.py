@@ -44,7 +44,7 @@ def get_symbol_name(symbol_table: SymbolTable, mem_mgr: MemoryManager, vdir: int
         return str(mem_mgr.constants[vdir])
     
 
-def gen_obj():
+def gen_obj(file_path: str, filename: str, output_path: str = "./output") -> None:
 
     with open('grammar.lark', 'r') as file:
         grammar = file.read()
@@ -53,101 +53,106 @@ def gen_obj():
     babyParser = Lark(grammar, start='start', parser='lalr', debug=True)
     baby = babyParser.parse
 
-    
     # Create the Lark parser
     babyParser = Lark(grammar, start='start', parser='lalr', debug=True)
     baby = babyParser.parse
 
-    tests_dir = "./input"
+    # tests_dir = "./input"
     output_dir = "./output"
 
-    if not os.path.exists(tests_dir):
-        os.makedirs(tests_dir)
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    for filename in os.listdir(tests_dir):
-        if not filename.endswith(".baby"):
-            continue
+    base_name = os.path.splitext(filename)[0]
+    input_filename = file_path + os.sep + filename
+    output_filename = output_dir + os.sep + f"{base_name}.ovejota"
+    output_object_filename = output_dir + os.sep + f"{base_name}.obj"
 
-        base_name = os.path.splitext(filename)[0]
-        input_filename = os.path.join(tests_dir, filename)
-        output_filename = os.path.join(output_dir, f"{base_name}.ovejota")
-        output_object_filename = os.path.join(output_dir, f"{base_name}.obj")
+    with open(output_filename, 'w', encoding='utf-8') as output_file:
+        with contextlib.redirect_stdout(output_file):
+            with open(input_filename, 'r', encoding='utf-8') as input_file:
+                program = input_file.read()
+                memory_manager = MemoryManager()
 
-        with open(output_filename, 'w', encoding='utf-8') as output_file:
-            with contextlib.redirect_stdout(output_file):
-                with open(input_filename, 'r', encoding='utf-8') as input_file:
-                    program = input_file.read()
-                    memory_manager = MemoryManager()
+                # Initialize the symbol table
+                symbol_table = SymbolTable(memory_manager=memory_manager)
+                tree = baby(program)
+                # print(tree.pretty())
 
-                    # Initialize the symbol table
-                    symbol_table = SymbolTable(memory_manager=memory_manager)
-                    tree = baby(program)
-                    # print(tree.pretty())
+                # Transform the parse tree using BabyTransformer
+                baby_transformer = BabyTransformer()
+                ir = baby_transformer.transform(tree)
+                # print(ir)
 
-                    # Transform the parse tree using BabyTransformer
-                    baby_transformer = BabyTransformer()
-                    ir = baby_transformer.transform(tree)
-                    # print(ir)
+                # Execute the IR
+                baby_interpreter = BabyInterpreter(symbol_table, memory_manager=memory_manager)
+                baby_interpreter.generate_quads(ir)
 
-                    # Execute the IR
-                    baby_interpreter = BabyInterpreter(symbol_table, memory_manager=memory_manager)
-                    baby_interpreter.generate_quads(ir)
+                # Generate object file content
+                output_file.write(f"# BabyDuck Object File: {base_name}\n")
+                output_file.write(f"# Generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+                
+                # Write constants table
+                output_file.write("# Constants Table\n")
+                for addr, const_value in memory_manager.constants.items():
+                    output_file.write(f"{addr} {repr(const_value)}\n")
+                output_file.write("\n")
+                
+                # Write function directory
+                output_file.write("# Function Directory\n")
+                output_file.write(symbol_table.to_string())
+                # for scope_name, scope in symbol_table.scopes.items():
+                #     if scope_name != "global":
+                #         output_file.write(f"FUNC {scope_name}\n")
+                output_file.write("\n")
+                
+                # Write quads
+                output_file.write("# Quadruples\n")
 
-                    # Generate object file content
-                    output_file.write(f"# BabyDuck Object File: {base_name}\n")
-                    output_file.write(f"# Generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
-                    
-                    # Write constants table
-                    output_file.write("# Constants Table\n")
-                    for addr, const_value in memory_manager.constants.items():
-                        output_file.write(f"{addr} {repr(const_value)}\n")
+                for i, quad in enumerate(baby_interpreter.quads):
+                    output_file.write(f"<{i}> {quad.op_vdir} {quad.vdir1} {quad.vdir2} {quad.storage_vdir}")
+                    if quad.label:
+                        output_file.write(f" -> {quad.label}")
                     output_file.write("\n")
                     
-                    # Write function directory
-                    output_file.write("# Function Directory\n")
-                    for scope_name, scope in symbol_table.scopes.items():
-                        if scope_name != "global":
-                            output_file.write(f"FUNC {scope_name}\n")
-                    output_file.write("\n")
+                output_file.write("--------\n")
+
+                for i, quad in enumerate(baby_interpreter.quads):
+                    output_file.write(f"<{i}> {str(Operations(quad.op_vdir))[11:]}")
+                    if quad.vdir1:
+                        if quad.op_vdir == Operations.GOTO.value or quad.op_vdir == Operations.GOSUB.value:
+                            output_file.write(f" {quad.vdir1}")
+                        else:
+                            output_file.write(f" {get_symbol_name(symbol_table, memory_manager, vdir=quad.vdir1, scope_name=quad.scope)}")
+                    if quad.vdir2:
+                        if quad.op_vdir == Operations.GOTOF.value:
+                            output_file.write(f" {quad.vdir2}")
+                        else:
+                            output_file.write(f" {get_symbol_name(symbol_table, memory_manager, vdir=quad.vdir2, scope_name=quad.scope)}")
+
+                    if quad.storage_vdir:
+                        output_file.write(f" {get_symbol_name(symbol_table, memory_manager, vdir=quad.storage_vdir, scope_name=quad.scope)}")
                     
-                    # Write quads
-                    output_file.write("# Quadruples\n")
-                    for i, quad in enumerate(baby_interpreter.quads):
-                        quad_str = f"{i} {quad.op_vdir}"
+                    if quad.label:
+                        output_file.write(f" -> {quad.label}")
 
-                        if quad.vdir1 is not None:
-                            quad_str += f" {quad.vdir1}"
+                    output_file.write("\n")
 
-                        if quad.vdir2 is not None:
-                            quad_str += f" {quad.vdir2}"
-
-                        if quad.storage_vdir is not None:
-                            quad_str += f" {quad.storage_vdir}"
-                        
-                        if quad.label is not None:
-                            quad_str += f" -> {quad.label}"
-
-                        output_file.write(quad_str + "\n")
-
-                    print(f"Successfully compiled {filename} to {base_name}.ovejota")
-
-                    with open(output_object_filename, 'wb') as binary_output:
-                        obj_data = ObjData(
-                            metadata=ObjectFileMetadata(
-                                filename=base_name,
-                                timestamp=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                            ),
-                            constants=memory_manager.constants,
-                            functions=symbol_table.scopes,
-                            quads=baby_interpreter.quads
-                        )
-                        pickle.dump(obj_data, binary_output)
+                with open(output_object_filename, 'wb') as binary_output:
+                    obj_data = ObjData(
+                        metadata=ObjectFileMetadata(
+                            filename=base_name,
+                            timestamp=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                        ),
+                        constants=memory_manager.constants,
+                        functions=symbol_table.scopes,
+                        quads=baby_interpreter.quads
+                    )
+                    pickle.dump(obj_data, binary_output)
 
 
         sys.stdout = sys.__stdout__
 
 
 if __name__ == "__main__":
-    gen_obj()
+    gen_obj("./input", "function.baby")

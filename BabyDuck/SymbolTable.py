@@ -139,9 +139,9 @@ class SymbolTable:
         for scope_name, scope in self.scopes.items():
             result += f"Scope: {scope_name}\n"
             for symbol in scope.symbols.values():
-                result += f"  {symbol.name}: {symbol.data_type} = {symbol.value}\n"
+                result += f"  {symbol.name} - {symbol.vdir}: {symbol.data_type} = {symbol.value}\n"
             for param in scope.param_list:
-                result += f"  Param: {param.name}: {param.data_type} = {param.value}\n"
+                result += f"  Param: {param.name} - {param.vdir}: {param.data_type} = {param.value}\n"
         return result
     
     

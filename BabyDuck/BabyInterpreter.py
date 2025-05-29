@@ -274,6 +274,7 @@ class BabyInterpreter:
         
         for i, arg in enumerate(ir.args):
             expr_vdir = self.evaluate_expression(arg)
+            alloc_vdir = expr_vdir
             expr_type = self.memory_manager.get_address_type(expr_vdir)
 
             param_type = scope.param_list[i].data_type
@@ -288,15 +289,14 @@ class BabyInterpreter:
 
             if expr_type != new_type:
                 # Convert the expression to the expected type
-                prev_vdir = expr_vdir
                 if new_type == "int":
-                    expr_vdir = self.memory_manager.allocate(AllocCategory.TEMP_INT, local_name=self.current_scope)
+                    alloc_vdir = self.memory_manager.allocate(AllocCategory.TEMP_INT, local_name=self.current_scope)
                 elif new_type == "float":
-                    expr_vdir = self.memory_manager.allocate(AllocCategory.TEMP_FLOAT, local_name=self.current_scope)
-                self.add_quad(op=Operations.ASSIGN, vdir1=prev_vdir, storage_vdir=expr_vdir)
+                    alloc_vdir = self.memory_manager.allocate(AllocCategory.TEMP_FLOAT, local_name=self.current_scope)
+                self.add_quad(op=Operations.ASSIGN, vdir1=alloc_vdir, vdir2=expr_vdir)
 
-            self.add_quad(op=Operations.PARAM, vdir1=expr_vdir)
+            self.add_quad(op=Operations.PARAM, vdir1=alloc_vdir)
         
-        self.add_quad(op=Operations.GOSUB, vdir1=scope.starting_quad)
+        self.add_quad(op=Operations.GOSUB, vdir1=scope.starting_quad, label=ir.id)
             
         self.current_scope = "global"

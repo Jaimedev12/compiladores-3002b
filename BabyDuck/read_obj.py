@@ -8,29 +8,9 @@ from datetime import datetime
 # Import the same dataclasses to ensure compatibility
 from util_dataclasses import Quad, ConstantValue
 from SymbolTable import Scope
-
-@dataclass
-class ObjectFileMetadata:
-    filename: str
-    timestamp: str
-
-@dataclass
-class ObjData:
-    metadata: ObjectFileMetadata
-    constants: Dict[int, ConstantValue]
-    functions: Dict[str, Scope]
-    quads: List[Quad]
+from gen_obj import ObjectFileMetadata, ObjData
 
 def read_obj_file(obj_path: str) -> ObjData:
-    """
-    Read and deserialize a BabyDuck object file
-    
-    Args:
-        obj_path: Path to the .obj file
-        
-    Returns:
-        ObjData object containing the deserialized data
-    """
     try:
         with open(obj_path, 'rb') as file:
             obj_data = pickle.load(file)
@@ -43,7 +23,6 @@ def read_obj_file(obj_path: str) -> ObjData:
         sys.exit(1)
 
 def display_obj_info(obj_data: ObjData):
-    """Display information about the loaded object file"""
     print("===== BabyDuck Object File =====")
     print(f"Program: {obj_data.metadata.filename}")
     print(f"Compiled: {obj_data.metadata.timestamp}")
@@ -85,21 +64,6 @@ def display_obj_info(obj_data: ObjData):
             quad_str += f" [{quad.label}]"
             
         print(quad_str)
-
-# def main():
-#     if len(sys.argv) < 2:
-#         print("Usage: python read_obj.py <object_file.obj>")
-#         sys.exit(1)
-        
-#     obj_path = sys.argv[1]
-#     if not obj_path.endswith('.obj'):
-#         obj_path += '.obj'
-        
-#     obj_data = read_obj_file(obj_path)
-#     display_obj_info(obj_data)
-
-# if __name__ == "__main__":
-#     main()
 
 def main():
 
