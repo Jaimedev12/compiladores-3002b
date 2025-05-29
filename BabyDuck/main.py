@@ -11,6 +11,7 @@ from SymbolTable import SymbolTable
 from MemoryManager import MemoryManager
 from BabyVirtualMachine import BabyVirtualMachine
 from gen_obj import ObjectFileMetadata, ObjData, gen_obj
+from read_obj import read_obj_file
 
 def compile_and_run(file_path: str, filename: str):
     """
@@ -20,59 +21,11 @@ def compile_and_run(file_path: str, filename: str):
         input_file: Path to the .baby source file
     """
 
-    gen_obj(file_path, filename)
+    gen_obj(file_path, filename+".baby")
     # Setup output paths
-    base_name = os.path.splitext(os.path.basename(filename))[0]
-    output_dir = os.path.dirname(file_path)
-    output_object_filename = os.path.join(output_dir, f"{base_name}.obj")
-    
-    print(f"Compiling {input_file}...")
-    
-    # Load grammar
-    with open('grammar.lark', 'r') as file:
-        grammar = file.read()
-    
-    # Create parser
-    parser = Lark(grammar, start='start', parser='lalr')
-    
-    # Compile
+    obj_data = read_obj_file("output/" + filename+".obj")
+
     try:
-        # Read program
-        with open(input_file, 'r', encoding='utf-8') as source_file:
-            program = source_file.read()
-        
-        # Setup core components
-        memory_manager = MemoryManager()
-        symbol_table = SymbolTable(memory_manager=memory_manager)
-        
-        # Parse to AST
-        tree = parser.parse(program)
-        
-        # Transform to IR
-        baby_transformer = BabyTransformer()
-        ir = baby_transformer.transform(tree)
-        
-        # Generate quads
-        baby_interpreter = BabyInterpreter(symbol_table, memory_manager=memory_manager)
-        baby_interpreter.generate_quads(ir)
-        
-        # Create binary object file
-        obj_data = ObjData(
-            metadata=ObjectFileMetadata(
-                filename=base_name,
-                timestamp=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            ),
-            constants=memory_manager.constants,
-            functions=symbol_table.scopes,
-            quads=baby_interpreter.quads
-        )
-        
-        # Save object file
-        with open(output_object_filename, 'wb') as binary_output:
-            pickle.dump(obj_data, binary_output)
-            
-        print(f"Compilation successful. Object file: {output_object_filename}")
-        
         # Run the program
         print("\nRunning program...")
         print("-" * 40)
@@ -94,8 +47,6 @@ if __name__ == "__main__":
     # filename = "function.baby"
     filename = sys.argv[1]
     input_file = os.path.join(input_path, filename)
-    if not input_file.endswith('.baby'):
-        print("File must have .baby extension")
-        sys.exit(1)
+
         
     compile_and_run(input_path, filename)

@@ -9,7 +9,7 @@ from BabyTransformer import BabyTransformer
 from BabyInterpreter import BabyInterpreter
 from SymbolTable import SymbolTable, Scope
 from MemoryManager import MemoryManager, Operations, AllocCategory
-from typing import Dict, List, Any, Union
+from typing import Dict, List
 from util_dataclasses import ConstantValue, Quad
 
     
@@ -49,11 +49,9 @@ def gen_obj(file_path: str, filename: str, output_path: str = "./output") -> Non
     with open('grammar.lark', 'r') as file:
         grammar = file.read()
 
-    # Create the Lark parser
     babyParser = Lark(grammar, start='start', parser='lalr', debug=True)
     baby = babyParser.parse
 
-    # Create the Lark parser
     babyParser = Lark(grammar, start='start', parser='lalr', debug=True)
     baby = babyParser.parse
 
@@ -74,47 +72,34 @@ def gen_obj(file_path: str, filename: str, output_path: str = "./output") -> Non
                 program = input_file.read()
                 memory_manager = MemoryManager()
 
-                # Initialize the symbol table
                 symbol_table = SymbolTable(memory_manager=memory_manager)
                 tree = baby(program)
-                # print(tree.pretty())
 
-                # Transform the parse tree using BabyTransformer
                 baby_transformer = BabyTransformer()
                 ir = baby_transformer.transform(tree)
-                # print(ir)
 
-                # Execute the IR
                 baby_interpreter = BabyInterpreter(symbol_table, memory_manager=memory_manager)
                 baby_interpreter.generate_quads(ir)
 
-                # Generate object file content
                 output_file.write(f"# BabyDuck Object File: {base_name}\n")
                 output_file.write(f"# Generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
                 
-                # Write constants table
                 output_file.write("# Constants Table\n")
                 for addr, const_value in memory_manager.constants.items():
                     output_file.write(f"{addr} {repr(const_value)}\n")
                 output_file.write("\n")
                 
-                # Write function directory
                 output_file.write("# Function Directory\n")
                 output_file.write(symbol_table.to_string())
-                # for scope_name, scope in symbol_table.scopes.items():
-                #     if scope_name != "global":
-                #         output_file.write(f"FUNC {scope_name}\n")
                 output_file.write("\n")
                 
-                # Write quads
                 output_file.write("# Quadruples\n")
-
                 for i, quad in enumerate(baby_interpreter.quads):
                     output_file.write(f"<{i}> {quad.op_vdir} {quad.vdir1} {quad.vdir2} {quad.storage_vdir}")
                     if quad.label:
                         output_file.write(f" -> {quad.label}")
                     output_file.write("\n")
-                    
+
                 output_file.write("--------\n")
 
                 for i, quad in enumerate(baby_interpreter.quads):

@@ -1,14 +1,6 @@
 import pickle
 import sys
-import os
-from typing import Dict, List, Any
-from dataclasses import dataclass
-from datetime import datetime
-
-# Import the same dataclasses to ensure compatibility
-from util_dataclasses import Quad, ConstantValue
-from SymbolTable import Scope
-from gen_obj import ObjectFileMetadata, ObjData
+from gen_obj import ObjData
 
 def read_obj_file(obj_path: str) -> ObjData:
     try:
@@ -76,9 +68,6 @@ def main():
 
     obj_data = read_obj_file(obj_file_path)
     display_obj_info(obj_data)
-
-    # You could also implement a virtual machine here to execute the bytecode
-    print("\nTo run this program, use baby_vm.py")
 
 if __name__ == "__main__":
     main()
