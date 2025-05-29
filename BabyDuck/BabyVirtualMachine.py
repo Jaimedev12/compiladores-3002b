@@ -1,12 +1,37 @@
 import sys
 import pickle
-from typing import Dict, List, Any, Optional, Union
+from typing import Dict, List, Any, Optional, Union, Tuple, Callable
 from dataclasses import dataclass
+from enum import Enum
 
-# Import the same dataclasses to ensure compatibility
 from util_dataclasses import Quad, AllocCategory, Operations, ConstantValue
 from MemoryManager import MemoryManager
 from read_obj import read_obj_file, ObjData
+
+class MemorySegment(Enum):
+    GLOBAL_INT = (1000, 1999)
+    GLOBAL_FLOAT = (2000, 2999)
+    LOCAL_INT = (3000, 3999)
+    LOCAL_FLOAT = (4000, 4999)
+    TEMP_INT = (5000, 5999)
+    TEMP_FLOAT = (6000, 6999)
+    CONSTANT = (7000, 7999)
+    
+    @classmethod
+    def get_segment_by_address(cls, address: int) -> 'MemorySegment':
+        for segment in cls:
+            if segment.value[0] <= address <= segment.value[1]:
+                return segment
+        raise ValueError(f"Invalid memory address: {address}")
+    
+    @property
+    def is_local(self) -> bool:
+        return self in (MemorySegment.LOCAL_INT, MemorySegment.LOCAL_FLOAT, 
+                       MemorySegment.TEMP_INT, MemorySegment.TEMP_FLOAT)
+    
+    @property
+    def is_float(self) -> bool:
+        return self in (MemorySegment.GLOBAL_FLOAT, MemorySegment.LOCAL_FLOAT, MemorySegment.TEMP_FLOAT)
 
 class ActivationRecord:
     """Represents a function call's memory context"""
@@ -50,95 +75,72 @@ class BabyVirtualMachine:
         
         self.call_stack.append(ActivationRecord("global", -1))
 
-    def get_memory_value(self, address: int) -> Any:
+    def get_memory_value(self, address: Optional[int]) -> Any:
         """Get a value from the appropriate memory segment"""
-        if address >= 7000:  # Constants
-            if address in self.constants:
-                return self.constants[address]
-            raise ValueError(f"Undefined constant at address {address}")
-            
-        elif address >= 6000:  # Temp float
-            if len(self.call_stack) > 0:
-                ar = self.call_stack[-1]
-                if address in ar.temp_memory:
-                    return ar.temp_memory[address]
-            raise ValueError(f"Undefined temp float at address {address}")
-            
-        elif address >= 5000:  # Temp int
-            if len(self.call_stack) > 0:
-                ar = self.call_stack[-1]
-                if address in ar.temp_memory:
-                    return ar.temp_memory[address]
-            raise ValueError(f"Undefined temp int at address {address}")
-            
-        elif address >= 4000:  # Local float
-            if len(self.call_stack) > 0:
-                ar = self.call_stack[-1]
-                if address in ar.local_memory:
-                    return ar.local_memory[address]
-            raise ValueError(f"Undefined local float at address {address}")
-            
-        elif address >= 3000:  # Local int
-            if len(self.call_stack) > 0:
-                ar = self.call_stack[-1]
-                if address in ar.local_memory:
-                    return ar.local_memory[address]
-            raise ValueError(f"Undefined local int at address {address}")
-            
-        elif address >= 2000:  # Global float
-            if address in self.global_memory:
-                return self.global_memory[address]
-            raise ValueError(f"Undefined global float at address {address}")
-            
-        elif address >= 1000:  # Global int
-            if address in self.global_memory:
-                return self.global_memory[address]
-            raise ValueError(f"Undefined global int at address {address}")
-            
-        else:
-            raise ValueError(f"Invalid memory address: {address}")
+        if address is None:
+            raise ValueError("Cannot access memory with None address")
 
-    def set_memory_value(self, address: int, value: Any) -> None:
+        try:
+            segment = MemorySegment.get_segment_by_address(address)
+            
+            if segment == MemorySegment.CONSTANT:
+                if address in self.constants:
+                    return self.constants[address]
+                raise ValueError(f"Undefined constant at address {address}")
+            
+            if segment.is_local:
+                if not self.call_stack:
+                    raise ValueError(f"No active function context for {segment.name} memory")
+                
+                ar = self.call_stack[-1]
+                memory = ar.temp_memory if segment in (MemorySegment.TEMP_INT, MemorySegment.TEMP_FLOAT) else ar.local_memory
+                
+                if address in memory:
+                    return memory[address]
+                raise ValueError(f"Undefined variable at address {address} in {segment.name}")
+            
+            else:
+                if address in self.global_memory:
+                    return self.global_memory[address]
+                raise ValueError(f"Undefined variable at address {address} in {segment.name}")
+                
+        except ValueError as e:
+            raise ValueError(f"Memory access error: {str(e)}")
+
+    def set_memory_value(self, address: Optional[int], value: Any) -> None:
         """Store a value in the appropriate memory segment"""
-        if address >= 7000:  # Constants
-            raise ValueError(f"Cannot modify constant at address {address}")
+        if address is None:
+            raise ValueError("Cannot write to memory with None address")
+        
+        try:
+            segment = MemorySegment.get_segment_by_address(address)
             
-        elif address >= 6000:  # Temp float
-            if len(self.call_stack) > 0:
+            if segment == MemorySegment.CONSTANT:
+                raise ValueError(f"Cannot modify constant at address {address}")
+            
+            value_to_store = float(value) if segment.is_float else int(value)
+            
+            if segment.is_local:
+                if not self.call_stack:
+                    raise ValueError(f"No active function context for {segment.name} memory")
+                
                 ar = self.call_stack[-1]
-                ar.temp_memory[address] = float(value)
+                if segment in (MemorySegment.TEMP_INT, MemorySegment.TEMP_FLOAT):
+                    ar.temp_memory[address] = value_to_store
+                else:
+                    ar.local_memory[address] = value_to_store
+                    
             else:
-                raise ValueError("No active function context for temp float")
-            
-        elif address >= 5000:  # Temp int
-            if len(self.call_stack) > 0:
-                ar = self.call_stack[-1]
-                ar.temp_memory[address] = int(value)
-            else:
-                raise ValueError("No active function context for temp int")
-            
-        elif address >= 4000:  # Local float
-            if len(self.call_stack) > 0:
-                ar = self.call_stack[-1]
-                ar.local_memory[address] = float(value)
-            else:
-                raise ValueError("No active function context for local float")
-            
-        elif address >= 3000:  # Local int
-            if len(self.call_stack) > 0:
-                ar = self.call_stack[-1]
-                ar.local_memory[address] = int(value)
-            else:
-                raise ValueError("No active function context for local int")
-            
-        elif address >= 2000:  # Global float
-            self.global_memory[address] = float(value)
-            
-        elif address >= 1000:  # Global int
-            self.global_memory[address] = int(value)
-            
-        else:
-            raise ValueError(f"Invalid memory address: {address}")
+                self.global_memory[address] = value_to_store
+                
+        except ValueError as e:
+            raise ValueError(f"Memory write error: {str(e)}")
+    
+    def validate_operation_args(self, quad: Quad, required_args: Tuple[str, ...]) -> None:
+        """Validate that required arguments are present in the quadruple"""
+        for arg_name in required_args:
+            if getattr(quad, arg_name) is None:
+                raise ValueError(f"Missing required argument: {arg_name} for operation {Operations(quad.op_vdir).name}")
     
     def run(self) -> None:
         """Execute the program"""
@@ -147,11 +149,11 @@ class BabyVirtualMachine:
         while self.instruction_pointer < len(self.quads):
             quad = self.quads[self.instruction_pointer]
             
-            # print(f"Executing quad {self.instruction_pointer}: {quad}")
-            # print(self.call_stack[-1].local_memory)
-
             if quad.op_vdir in self.operations:
-                self.operations[quad.op_vdir](quad)
+                try:
+                    self.operations[quad.op_vdir](quad)
+                except Exception as e:
+                    raise RuntimeError(f"Error executing instruction {self.instruction_pointer}: {e}")
             else:
                 raise ValueError(f"Unknown operation code: {quad.op_vdir}")
                 
@@ -160,125 +162,98 @@ class BabyVirtualMachine:
                                    Operations.END.value]:
                 self.instruction_pointer += 1
 
-    def _op_plus(self, quad: Quad) -> None:
-        if quad.vdir1 is None or quad.vdir2 is None or quad.storage_vdir is None:
-            raise ValueError("Both vdir1 and vdir2 must be provided for addition")
+    def _execute_binary_operation(self, quad: Quad, operation: Callable[[Any, Any], Any]) -> None:
+        """Execute a binary operation with the given function"""
+        self.validate_operation_args(quad, ('vdir1', 'vdir2', 'storage_vdir'))
         val1 = self.get_memory_value(quad.vdir1)
         val2 = self.get_memory_value(quad.vdir2)
-        result = val1 + val2
+        result = operation(val1, val2)
         self.set_memory_value(quad.storage_vdir, result)
+    
+    def _op_plus(self, quad: Quad) -> None:
+        self._execute_binary_operation(quad, lambda a, b: a + b)
     
     def _op_minus(self, quad: Quad) -> None:
-        if quad.vdir1 is None or quad.vdir2 is None or quad.storage_vdir is None:
-            raise ValueError("Both vdir1 and vdir2 must be provided for subtraction")
-        val1 = self.get_memory_value(quad.vdir1)
-        val2 = self.get_memory_value(quad.vdir2)
-        result = val1 - val2
-        self.set_memory_value(quad.storage_vdir, result)
+        self._execute_binary_operation(quad, lambda a, b: a - b)
     
     def _op_mult(self, quad: Quad) -> None:
-        if quad.vdir1 is None or quad.vdir2 is None or quad.storage_vdir is None:
-            raise ValueError("Both vdir1 and vdir2 must be provided for multiplication")
-        val1 = self.get_memory_value(quad.vdir1)
-        val2 = self.get_memory_value(quad.vdir2)
-        result = val1 * val2
-        self.set_memory_value(quad.storage_vdir, result)
+        self._execute_binary_operation(quad, lambda a, b: a * b)
     
     def _op_div(self, quad: Quad) -> None:
-        if quad.vdir1 is None or quad.vdir2 is None or quad.storage_vdir is None:
-            raise ValueError("Both vdir1 and vdir2 must be provided for division")
+        self._execute_binary_operation(quad, lambda a, b: a / b if b != 0 else (_ for _ in ()).throw(ZeroDivisionError("Division by zero")))
+    
+    def _execute_comparison(self, quad: Quad, comparison: Callable[[Any, Any], bool]) -> None:
+        """Execute a comparison operation with the given function"""
+        self.validate_operation_args(quad, ('vdir1', 'vdir2', 'storage_vdir'))
         val1 = self.get_memory_value(quad.vdir1)
         val2 = self.get_memory_value(quad.vdir2)
-        if val2 == 0:
-            raise ZeroDivisionError("Division by zero")
-        result = val1 / val2
+        result = 1 if comparison(val1, val2) else 0
         self.set_memory_value(quad.storage_vdir, result)
     
     def _op_less_than(self, quad: Quad) -> None:
-        if quad.vdir1 is None or quad.vdir2 is None or quad.storage_vdir is None:
-            raise ValueError("Both vdir1 and vdir2 must be provided for less than comparison")
-        val1 = self.get_memory_value(quad.vdir1)
-        val2 = self.get_memory_value(quad.vdir2)
-        result = 1 if val1 < val2 else 0
-        self.set_memory_value(quad.storage_vdir, result)
+        self._execute_comparison(quad, lambda a, b: a < b)
     
     def _op_greater_than(self, quad: Quad) -> None:
-        if quad.vdir1 is None or quad.vdir2 is None or quad.storage_vdir is None:
-            raise ValueError("Both vdir1 and vdir2 must be provided for greater than comparison")
-        val1 = self.get_memory_value(quad.vdir1)
-        val2 = self.get_memory_value(quad.vdir2)
-        result = 1 if val1 > val2 else 0
-        self.set_memory_value(quad.storage_vdir, result)
+        self._execute_comparison(quad, lambda a, b: a > b)
     
     def _op_not_equal(self, quad: Quad) -> None:
-        if quad.vdir1 is None or quad.vdir2 is None or quad.storage_vdir is None:
-            raise ValueError("Both vdir1 and vdir2 must be provided for not equal comparison")
-        val1 = self.get_memory_value(quad.vdir1)
-        val2 = self.get_memory_value(quad.vdir2)
-        result = 1 if val1 != val2 else 0
-        self.set_memory_value(quad.storage_vdir, result)
+        self._execute_comparison(quad, lambda a, b: a != b)
     
     def _op_assign(self, quad: Quad) -> None:
-        if quad.vdir1 is None or quad.vdir2 is None:
-            raise ValueError("vdir1 and vdir2 must be provided for assignment")
+        self.validate_operation_args(quad, ('vdir1', 'vdir2'))
         val = self.get_memory_value(quad.vdir2)
         self.set_memory_value(quad.vdir1, val)
     
     def _op_print(self, quad: Quad) -> None:
-        if quad.vdir1 is None:
-            raise ValueError("vdir1 must be provided for print operation")
+        self.validate_operation_args(quad, ('vdir1',))
         val = self.get_memory_value(quad.vdir1)
         print(val)
     
     def _op_gotof(self, quad: Quad) -> None:
-        if quad.vdir1 is None or quad.vdir2 is None:
-            raise ValueError("vdir1 and vdir2 must be provided for goto-if-false operation")
-        
+        self.validate_operation_args(quad, ('vdir1', 'vdir2'))
         condition = self.get_memory_value(quad.vdir1)
-        if condition == 0:  # If condition is false
+        if condition == 0:
+            assert quad.vdir2 is not None, "GOTOF requires a valid vdir2"
             self.instruction_pointer = quad.vdir2
         else:
             self.instruction_pointer += 1
     
     def _op_goto(self, quad: Quad) -> None:
-        if quad.vdir1 is None:
-            raise ValueError("vdir1 must be provided for goto operation")
+        self.validate_operation_args(quad, ('vdir1',))
+        assert quad.vdir1 is not None, "GOTO requires a valid vdir1"
         self.instruction_pointer = quad.vdir1
     
     def _op_end(self, quad: Quad) -> None:
         self.instruction_pointer = len(self.quads)
     
     def _op_alloc(self, quad: Quad) -> None:
-        # Initialize a new function activation, but don't push it yet
-        # We'll do that in _op_gosub after parameters are processed
-        # Just advance to next instruction for now
+        # No validation needed - just a no-op for VM
         pass
     
     def _op_param(self, quad: Quad) -> None:
-        if quad.vdir1 is None:
-            raise ValueError("vdir1 must be provided for param operation")
-        
+        self.validate_operation_args(quad, ('vdir1',))
         val = self.get_memory_value(quad.vdir1)
-        if len(self.call_stack) > 0:
+        if self.call_stack:
             self.call_stack[-1].parameters.append(val)
     
     def _op_gosub(self, quad: Quad) -> None:
-        if quad.vdir1 is None or quad.label is None:
-            raise ValueError("vdir1 and label must be provided for gosub operation")
+        self.validate_operation_args(quad, ('vdir1', 'label'))
         function_name = quad.label
+        if function_name not in self.functions:
+            raise ValueError(f"Function '{function_name}' not defined")
         function_scope = self.functions[function_name]
         
         ar = ActivationRecord(function_name, self.instruction_pointer + 1)
         
         current_params = self.call_stack[-1].parameters
-        self.call_stack[-1].parameters = []  # Clear for next call
+        self.call_stack[-1].parameters = []
         
         for i, param in enumerate(function_scope.param_list):
             if i < len(current_params):
                 ar.local_memory[param.vdir] = current_params[i]
         
         self.call_stack.append(ar)
-        
+        assert quad.vdir1 is not None, "GOSUB requires a valid vdir1"
         self.instruction_pointer = quad.vdir1
     
     def _op_endfunc(self, quad: Quad) -> None:
